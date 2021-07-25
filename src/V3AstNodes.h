@@ -8714,6 +8714,7 @@ private:
     string m_argTypes;  // Argument types
     string m_ctorInits;  // Constructor sub-class inits
     string m_ifdef;  // #ifdef symbol around this function
+    string m_cudaScope;
     VBoolOrUnknown m_isConst;  // Function is declared const (*this not changed)
     VBoolOrUnknown m_isStatic;  // Function is declared static (no this)
     bool m_dontCombine : 1;  // V3Combine shouldn't compare this func tree, it's special
@@ -8734,6 +8735,9 @@ private:
     bool m_dpiExportWrapper : 1;  // From dpi export; static function with dispatch table
     bool m_dpiImport : 1;  // From dpi import
     bool m_dpiImportWrapper : 1;  // Wrapper from dpi import
+    bool m_device : 1; // put to CUDA kernel
+    bool m_changeRequest : 1;
+    bool m_ctorReset : 1;
 public:
     AstCFunc(FileLine* fl, const string& name, AstScope* scopep, const string& rtnType = "")
         : ASTGEN_SUPER_CFunc(fl) {
@@ -8743,6 +8747,7 @@ public:
         m_scopep = scopep;
         m_name = name;
         m_rtnType = rtnType;
+        m_cudaScope = "";
         m_dontCombine = false;
         m_skipDecl = false;
         m_declPrivate = false;
@@ -8761,6 +8766,9 @@ public:
         m_dpiExportWrapper = false;
         m_dpiImport = false;
         m_dpiImportWrapper = false;
+        m_device = false;
+        m_changeRequest = false;
+        m_ctorReset = false;
     }
     ASTNODE_NODE_FUNCS(CFunc)
     virtual string name() const override { return m_name; }
@@ -8850,7 +8858,53 @@ public:
         return argsp() == nullptr && initsp() == nullptr && stmtsp() == nullptr
                && finalsp() == nullptr;
     }
+
+    void putDevice() {
+      m_device = true;
+    }
+
+    bool device() const {
+      return m_device;
+    }
+
+    void setCtorReset() {
+      m_ctorReset = true;
+    }
+
+    bool ctorReset() const {
+      return m_ctorReset;
+    }
+    
+    void cudaScope(const std::string& str) {
+      m_cudaScope = str;
+    }
+
+    std::string cudaScope() const {
+      return m_cudaScope;
+    }
+
+    void changeRequest(bool isChange) {
+      m_changeRequest = isChange;
+    }
+
+    bool changeRequest() const {
+      return m_changeRequest;
+    }
 };
+
+//class AstCudaAssign final : public AstNodeStmt {
+
+  //public:
+    
+    //AstCudaAssign(Fileline* f1, const std::string& lhs, AstNode* rhs): ASTGEN_SUPER(f1), m_lhs(lhs) {
+        //setOp1p(rhs);
+    //}
+
+    //AstNode* 
+
+  //private:
+    //std::string m_lhs;
+//};
 
 class AstCCall final : public AstNodeCCall {
     // C++ function call

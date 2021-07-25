@@ -26,12 +26,25 @@
 //============================================================================
 
 class V3EmitC final {
+    // RTLflow leverage datatype to get size, so that we can allocate GPU memory
+    using CData = vluint8_t;    ///< Data representing 'bit' of 1-8 packed bits
+    using SData = vluint16_t;   ///< Data representing 'bit' of 9-16 packed bits
+    using IData = vluint32_t;   ///< Data representing 'bit' of 17-32 packed bits
+    using QData = vluint64_t;   ///< Data representing 'bit' of 33-64 packed bits
+    using EData = vluint32_t;   ///< Data representing one element of WData array
+    using WData = EData;        ///< Data representing >64 packed bits (used as pointer)
 public:
     static void emitc();
     static void emitcInlines();
     static void emitcSyms(bool dpiHdrOnly = false);
     static void emitcTrace();
     static void emitcFiles();
+
+    // RTLflow
+    static void emitRTLflowInt();
+    static void emitRTLflowImp();
+
+    static size_t count_cuda_mem();
 };
 
 #endif  // Guard

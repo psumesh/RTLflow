@@ -1754,6 +1754,8 @@ AstActive* OrderVisitor::processMoveOneLogic(const OrderLogicVertex* lvertexp,
             if (!newFuncpr && domainp != m_deleteDomainp) {
                 const string name = cfuncName(modp, domainp, scopep, nodep);
                 newFuncpr = new AstCFunc(nodep->fileline(), name, scopep);
+                newFuncpr->cudaScope("__device__");
+                newFuncpr->putDevice();
                 newFuncpr->argTypes(EmitCBaseVisitor::symClassVar());
                 newFuncpr->symProlog(true);
                 newStmtsr = 0;

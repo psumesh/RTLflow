@@ -61,9 +61,11 @@ private:
         const int funcNum = m_newFunctions.size();
         const string funcName = m_basename + "_" + cvtToStr(funcNum);
         AstCFunc* const funcp = new AstCFunc(m_modp->fileline(), funcName, nullptr, "void");
+        funcp->setCtorReset();
         funcp->isStatic(!m_type.isClass());  // Class constructors are non static
         funcp->declPrivate(true);
         funcp->slow(!m_type.isClass());  // Only classes construct on fast path
+
         string preventUnusedStmt;
         if (m_type.isClass()) {
             funcp->argTypes(EmitCBaseVisitor::symClassVar());

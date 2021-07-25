@@ -659,9 +659,12 @@ AstNodeDType::CTypeRecursed AstNodeDType::cTypeRecurse(bool compound) const {
     } else if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
         if (adtypep->isCompound()) compound = true;
         const CTypeRecursed sub = adtypep->subDTypep()->cTypeRecurse(compound);
-        info.m_type = "VlUnpacked<" + sub.m_type;
+        std::string str = sub.m_type;
+        str.pop_back();
+        info.m_type = "RfUnpacked<" + str;
         info.m_type += ", " + cvtToStr(adtypep->declRange().elements());
-        info.m_type += ">";
+        info.m_type += ", Num_Testbenches";
+        info.m_type += ">*";
     } else if (const AstBasicDType* bdtypep = dtypep->basicp()) {
         // We don't print msb()/lsb() as multidim packed would require recursion,
         // and may confuse users as C++ data is stored always with bit 0 used
@@ -677,15 +680,15 @@ AstNodeDType::CTypeRecursed AstNodeDType::cTypeRecurse(bool compound) const {
         } else if (bdtypep->keyword() == AstBasicDTypeKwd::STRING) {
             info.m_type = "std::string";
         } else if (dtypep->widthMin() <= 8) {  // Handle unpacked arrays; not bdtypep->width
-            info.m_type = "CData" + bitvec;
+            info.m_type = "CData" + bitvec + "*";
         } else if (dtypep->widthMin() <= 16) {
-            info.m_type = "SData" + bitvec;
+            info.m_type = "SData" + bitvec + "*";
         } else if (dtypep->widthMin() <= VL_IDATASIZE) {
-            info.m_type = "IData" + bitvec;
+            info.m_type = "IData" + bitvec + "*";
         } else if (dtypep->isQuad()) {
-            info.m_type = "QData" + bitvec;
+            info.m_type = "QData" + bitvec + "*";
         } else if (dtypep->isWide()) {
-            info.m_type = "VlWide<" + cvtToStr(dtypep->widthWords()) + ">" + bitvec;
+            info.m_type = "RfWide<" + cvtToStr(dtypep->widthWords()) + ", Num_Testbenches>" + bitvec + "*";
         }
     } else {
         v3fatalSrc("Unknown data type in var type emitter: " << dtypep->prettyName());

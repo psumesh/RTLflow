@@ -283,6 +283,28 @@ public:
 #define VL_OUT(name, msb, lsb) IData name  ///< Declare output signal, 17-32 bits
 #define VL_OUTW(name, msb, lsb, words) WData name[words]  ///< Declare output signal, 65+ bits
 
+#define RF_SIG8(name, msb, lsb) CData* name  ///< Declare signal, 1-8 bits
+#define RF_SIG16(name, msb, lsb) SData* name  ///< Declare signal, 9-16 bits
+#define RF_SIG64(name, msb, lsb) QData* name  ///< Declare signal, 33-64 bits
+#define RF_SIG(name, msb, lsb) IData* name  ///< Declare signal, 17-32 bits
+#define RF_SIGW(name, msb, lsb, words) WData* name[words]  ///< Declare signal, 65+ bits
+#define RF_IN8(name, msb, lsb) CData* name  ///< Declare input signal, 1-8 bits
+#define RF_IN16(name, msb, lsb) SData* name  ///< Declare input signal, 9-16 bits
+#define RF_IN64(name, msb, lsb) QData* name  ///< Declare input signal, 33-64 bits
+#define RF_IN(name, msb, lsb) IData* name  ///< Declare input signal, 17-32 bits
+#define RF_INW(name, msb, lsb, words) WData* name[words]  ///< Declare input signal, 65+ bits
+#define RF_INOUT8(name, msb, lsb) CData* name  ///< Declare bidir signal, 1-8 bits
+#define RF_INOUT16(name, msb, lsb) SData* name  ///< Declare bidir signal, 9-16 bits
+#define RF_INOUT64(name, msb, lsb) QData* name  ///< Declare bidir signal, 33-64 bits
+#define RF_INOUT(name, msb, lsb) IData* name  ///< Declare bidir signal, 17-32 bits
+#define RF_INOUTW(name, msb, lsb, words) WData* name[words]  ///< Declare bidir signal, 65+ bits
+#define RF_OUT8(name, msb, lsb) CData* name  ///< Declare output signal, 1-8 bits
+#define RF_OUT16(name, msb, lsb) SData* name  ///< Declare output signal, 9-16 bits
+#define RF_OUT64(name, msb, lsb) QData* name  ///< Declare output signal, 33-64bits
+#define RF_OUT(name, msb, lsb) IData* name  ///< Declare output signal, 17-32 bits
+#define RF_OUTW(name, msb, lsb, words) WData* name[words]  ///< Declare output signal, 65+ bits
+
+
 #define VL_CELL(instname, type)  ///< Declare a cell, ala SP_CELL
 
 ///< Declare a module, ala SC_MODULE

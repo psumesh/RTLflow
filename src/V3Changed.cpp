@@ -61,6 +61,7 @@ public:
             m_chgFuncp
                 = new AstCFunc(m_scopetopp->fileline(), "_change_request_" + cvtToStr(++m_funcNum),
                                m_scopetopp, "QData");
+            m_chgFuncp->cudaScope("__device__");
             m_chgFuncp->argTypes(EmitCBaseVisitor::symClassVar());
             m_chgFuncp->symProlog(true);
             m_chgFuncp->declPrivate(true);
@@ -70,21 +71,34 @@ public:
             AstCCall* callp = new AstCCall(m_scopetopp->fileline(), m_chgFuncp);
             callp->argTypes("vlSymsp");
 
+
             if (!m_tlChgFuncp->stmtsp()) {
-                m_tlChgFuncp->addStmtsp(new AstCReturn(m_scopetopp->fileline(), callp));
+                //m_tlChgFuncp->addStmtsp(new AstCReturn(m_scopetopp->fileline(), callp));
+                //
+                //AstVar* changep = new AstVar(m_scopetopp->fileline(), AstVarType::BLOCKTEMP, "change", v3Global.rootp()->findBitDType());
+                //changep->funcLocal(true);
+                //m_tlChgFuncp->addInitsp(changep);
+                m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "QData __req = false;\n"));
+                m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "__req |= "));
+                m_tlChgFuncp->addStmtsp(VN_CAST(callp, Node));
+
             } else {
-                AstCReturn* returnp = VN_CAST(m_tlChgFuncp->stmtsp(), CReturn);
-                UASSERT_OBJ(returnp, m_scopetopp, "Lost CReturn in top change function");
+                //AstAssign* assignp = VN_CAST(m_tlChgFuncp->stmtsp(), Assign);
+                //UASSERT_OBJ(rrnp, m_scopetopp, "Lost CReturn in top change function");
                 // This is currently using AstLogOr which will shortcut the
                 // evaluation if any function returns true. This is likely what
                 // we want and is similar to the logic already in use inside
                 // V3EmitC, however, it also means that verbose logging may
                 // miss to print change detect variables.
-                AstNode* newp = new AstCReturn(
-                    m_scopetopp->fileline(),
-                    new AstLogOr(m_scopetopp->fileline(), callp, returnp->lhsp()->unlinkFrBack()));
-                returnp->replaceWith(newp);
-                VL_DO_DANGLING(returnp->deleteTree(), returnp);
+                //AstNode* newp = new AstAssign(
+                    //m_scopetopp->fileline(),
+                    //assignp->lhsp(),
+                    //new AstLogOr(m_scopetopp->fileline(), callp, assignp->rhsp()->unlinkFrBack())
+                //);
+                //assignp->replaceWith(newp);
+                //VL_DO_DANGLING(assignp->deleteTree(), assignp);
+                m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "__req |= "));
+                m_tlChgFuncp->addStmtsp(VN_CAST(callp, Node));
             }
             m_numStmts = 0;
         }
@@ -250,8 +264,9 @@ private:
 
         // Create a wrapper change detection function that calls each change detection function
         m_statep->m_tlChgFuncp
-            = new AstCFunc(nodep->fileline(), "_change_request", scopep, "QData");
-        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar());
+            = new AstCFunc(nodep->fileline(), "_change_request", scopep, "void");
+        m_statep->m_tlChgFuncp->cudaScope("__global__");
+        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar() + ", QData* change");
         m_statep->m_tlChgFuncp->symProlog(true);
         m_statep->m_tlChgFuncp->declPrivate(true);
         m_statep->m_scopetopp->addActivep(m_statep->m_tlChgFuncp);
@@ -290,6 +305,9 @@ void V3Changed::changedAll(AstNetlist* nodep) {
     {
         ChangedState state;
         ChangedVisitor visitor(nodep, &state);
+        if (state.m_tlChgFuncp->stmtsp()) {
+          state.m_tlChgFuncp->addStmtsp(new AstCStmt(nodep->fileline(), "change[threadIdx.x] = __req;\n"));
+        }
     }  // Destruct before checking
     V3Global::dumpCheckGlobalTree("changed", 0, v3Global.opt.dumpTreeLevel(__FILE__) >= 3);
 }
