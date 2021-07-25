@@ -71,32 +71,32 @@ public:
             AstCCall* callp = new AstCCall(m_scopetopp->fileline(), m_chgFuncp);
             callp->argTypes("vlSymsp");
 
-
             if (!m_tlChgFuncp->stmtsp()) {
-                //m_tlChgFuncp->addStmtsp(new AstCReturn(m_scopetopp->fileline(), callp));
+                // m_tlChgFuncp->addStmtsp(new AstCReturn(m_scopetopp->fileline(), callp));
                 //
-                //AstVar* changep = new AstVar(m_scopetopp->fileline(), AstVarType::BLOCKTEMP, "change", v3Global.rootp()->findBitDType());
-                //changep->funcLocal(true);
-                //m_tlChgFuncp->addInitsp(changep);
-                m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "QData __req = false;\n"));
+                // AstVar* changep = new AstVar(m_scopetopp->fileline(), AstVarType::BLOCKTEMP,
+                // "change", v3Global.rootp()->findBitDType()); changep->funcLocal(true);
+                // m_tlChgFuncp->addInitsp(changep);
+                m_tlChgFuncp->addStmtsp(
+                    new AstCStmt(m_scopetopp->fileline(), "QData __req = false;\n"));
                 m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "__req |= "));
                 m_tlChgFuncp->addStmtsp(VN_CAST(callp, Node));
 
             } else {
-                //AstAssign* assignp = VN_CAST(m_tlChgFuncp->stmtsp(), Assign);
-                //UASSERT_OBJ(rrnp, m_scopetopp, "Lost CReturn in top change function");
+                // AstAssign* assignp = VN_CAST(m_tlChgFuncp->stmtsp(), Assign);
+                // UASSERT_OBJ(rrnp, m_scopetopp, "Lost CReturn in top change function");
                 // This is currently using AstLogOr which will shortcut the
                 // evaluation if any function returns true. This is likely what
                 // we want and is similar to the logic already in use inside
                 // V3EmitC, however, it also means that verbose logging may
                 // miss to print change detect variables.
-                //AstNode* newp = new AstAssign(
-                    //m_scopetopp->fileline(),
-                    //assignp->lhsp(),
-                    //new AstLogOr(m_scopetopp->fileline(), callp, assignp->rhsp()->unlinkFrBack())
+                // AstNode* newp = new AstAssign(
+                // m_scopetopp->fileline(),
+                // assignp->lhsp(),
+                // new AstLogOr(m_scopetopp->fileline(), callp, assignp->rhsp()->unlinkFrBack())
                 //);
-                //assignp->replaceWith(newp);
-                //VL_DO_DANGLING(assignp->deleteTree(), assignp);
+                // assignp->replaceWith(newp);
+                // VL_DO_DANGLING(assignp->deleteTree(), assignp);
                 m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "__req |= "));
                 m_tlChgFuncp->addStmtsp(VN_CAST(callp, Node));
             }
@@ -306,7 +306,8 @@ void V3Changed::changedAll(AstNetlist* nodep) {
         ChangedState state;
         ChangedVisitor visitor(nodep, &state);
         if (state.m_tlChgFuncp->stmtsp()) {
-          state.m_tlChgFuncp->addStmtsp(new AstCStmt(nodep->fileline(), "change[threadIdx.x] = __req;\n"));
+            state.m_tlChgFuncp->addStmtsp(
+                new AstCStmt(nodep->fileline(), "change[threadIdx.x] = __req;\n"));
         }
     }  // Destruct before checking
     V3Global::dumpCheckGlobalTree("changed", 0, v3Global.opt.dumpTreeLevel(__FILE__) >= 3);

@@ -688,7 +688,8 @@ AstNodeDType::CTypeRecursed AstNodeDType::cTypeRecurse(bool compound) const {
         } else if (dtypep->isQuad()) {
             info.m_type = "QData" + bitvec + "*";
         } else if (dtypep->isWide()) {
-            info.m_type = "RfWide<" + cvtToStr(dtypep->widthWords()) + ", Num_Testbenches>" + bitvec + "*";
+            info.m_type
+                = "RfWide<" + cvtToStr(dtypep->widthWords()) + ", Num_Testbenches>" + bitvec + "*";
         }
     } else {
         v3fatalSrc("Unknown data type in var type emitter: " << dtypep->prettyName());
