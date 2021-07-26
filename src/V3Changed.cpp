@@ -63,7 +63,7 @@ public:
                                m_scopetopp, "IData");
             m_chgFuncp->cudaScope("__device__");
             m_chgFuncp->argTypes("IData* _isignals, QData* _qsignals");
-            //m_chgFuncp->symProlog(true);
+            // m_chgFuncp->symProlog(true);
             m_chgFuncp->declPrivate(true);
             m_scopetopp->addActivep(m_chgFuncp);
 
@@ -74,10 +74,11 @@ public:
             if (!m_tlChgFuncp->stmtsp()) {
                 // m_tlChgFuncp->addStmtsp(new AstCReturn(m_scopetopp->fileline(), callp));
                 //
-                //AstVar* changep = new AstVar(m_scopetopp->fileline(), AstVarType::BLOCKTEMP, "change", v3Global.rootp()->findBitDType());
-                //changep->funcLocal(true);
-                //m_tlChgFuncp->addInitsp(changep);
-                m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "IData __req = false;\n"));
+                // AstVar* changep = new AstVar(m_scopetopp->fileline(), AstVarType::BLOCKTEMP,
+                // "change", v3Global.rootp()->findBitDType()); changep->funcLocal(true);
+                // m_tlChgFuncp->addInitsp(changep);
+                m_tlChgFuncp->addStmtsp(
+                    new AstCStmt(m_scopetopp->fileline(), "IData __req = false;\n"));
                 m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "__req |= "));
                 m_tlChgFuncp->addStmtsp(VN_CAST(callp, Node));
 
@@ -265,7 +266,8 @@ private:
         m_statep->m_tlChgFuncp
             = new AstCFunc(nodep->fileline(), "_change_request", scopep, "void");
         m_statep->m_tlChgFuncp->cudaScope("__global__");
-        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar() + ", IData* _isignals, QData* _qsignals, IData* change");
+        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar()
+                                         + ", IData* _isignals, QData* _qsignals, IData* change");
         m_statep->m_tlChgFuncp->symProlog(true);
         m_statep->m_tlChgFuncp->declPrivate(true);
         m_statep->m_scopetopp->addActivep(m_statep->m_tlChgFuncp);

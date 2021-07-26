@@ -1756,7 +1756,8 @@ AstActive* OrderVisitor::processMoveOneLogic(const OrderLogicVertex* lvertexp,
                 newFuncpr = new AstCFunc(nodep->fileline(), name, scopep);
                 newFuncpr->cudaScope("__device__");
                 newFuncpr->putDevice();
-                newFuncpr->argTypes(EmitCBaseVisitor::symClassVar() + ", IData* _isignals, QData* _qsignals");
+                newFuncpr->argTypes(EmitCBaseVisitor::symClassVar()
+                                    + ", IData* _isignals, QData* _qsignals");
                 newFuncpr->symProlog(true);
                 newStmtsr = 0;
                 if (domainp->hasInitial() || domainp->hasSettle()) newFuncpr->slow(true);
