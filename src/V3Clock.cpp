@@ -213,11 +213,12 @@ private:
         AstNode::user1ClearTree();
         // Make top functions
         {
-            AstCFunc* funcp = new AstCFunc{nodep->fileline(), "_eval", m_topScopep->scopep()};
-            funcp->argTypes(EmitCBaseVisitor::symClassVar());
+            AstCFunc* funcp = new AstCFunc{nodep->fileline(), "_last_assign", m_topScopep->scopep()};
+            funcp->cudaScope("__global__");
+            funcp->putDevice();
+            funcp->argTypes("IData* _isignals, QData* _qsignals");
             funcp->dontCombine(true);
-            funcp->symProlog(true);
-            funcp->isStatic(true);
+            //funcp->symProlog(true);
             funcp->entryPoint(true);
             m_topScopep->scopep()->addActivep(funcp);
             m_evalFuncp = funcp;

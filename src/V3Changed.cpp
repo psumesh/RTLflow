@@ -60,16 +60,16 @@ public:
         if (!m_chgFuncp || v3Global.opt.outputSplitCFuncs() < m_numStmts) {
             m_chgFuncp
                 = new AstCFunc(m_scopetopp->fileline(), "_change_request_" + cvtToStr(++m_funcNum),
-                               m_scopetopp, "QData");
+                               m_scopetopp, "IData");
             m_chgFuncp->cudaScope("__device__");
-            m_chgFuncp->argTypes(EmitCBaseVisitor::symClassVar());
-            m_chgFuncp->symProlog(true);
+            m_chgFuncp->argTypes("IData* _isignals, QData* _qsignals");
+            //m_chgFuncp->symProlog(true);
             m_chgFuncp->declPrivate(true);
             m_scopetopp->addActivep(m_chgFuncp);
 
             // Add a top call to it
             AstCCall* callp = new AstCCall(m_scopetopp->fileline(), m_chgFuncp);
-            callp->argTypes("vlSymsp");
+            callp->argTypes("_isignals, _qsignals");
 
 
             if (!m_tlChgFuncp->stmtsp()) {
@@ -78,7 +78,7 @@ public:
                 //AstVar* changep = new AstVar(m_scopetopp->fileline(), AstVarType::BLOCKTEMP, "change", v3Global.rootp()->findBitDType());
                 //changep->funcLocal(true);
                 //m_tlChgFuncp->addInitsp(changep);
-                m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "QData __req = false;\n"));
+                m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "IData __req = false;\n"));
                 m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "__req |= "));
                 m_tlChgFuncp->addStmtsp(VN_CAST(callp, Node));
 
@@ -266,7 +266,7 @@ private:
         m_statep->m_tlChgFuncp
             = new AstCFunc(nodep->fileline(), "_change_request", scopep, "void");
         m_statep->m_tlChgFuncp->cudaScope("__global__");
-        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar() + ", QData* change");
+        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar() + ", IData* _isignals, QData* _qsignals, IData* change");
         m_statep->m_tlChgFuncp->symProlog(true);
         m_statep->m_tlChgFuncp->declPrivate(true);
         m_statep->m_scopetopp->addActivep(m_statep->m_tlChgFuncp);

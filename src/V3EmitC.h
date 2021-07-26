@@ -41,10 +41,10 @@ public:
     static void emitcFiles();
 
     // RTLflow
-    static void emitRTLflowInt();
+    static void emitRTLflowInt(size_t cuda_imem_size, size_t cuda_qmem_size);
     static void emitRTLflowImp();
 
-    static size_t count_cuda_mem();
+    static std::tuple<size_t, size_t> count_cuda_mem();
 };
 
 #endif  // Guard

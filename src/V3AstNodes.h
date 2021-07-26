@@ -1928,6 +1928,7 @@ private:
     VLifetime m_lifetime;  // Lifetime
     VVarAttrClocker m_attrClocker;
     MTaskIdSet m_mtaskIds;  // MTaskID's that read or write this var
+    size_t m_memLoc;
 
     void init() {
         m_ansi = false;
@@ -2227,6 +2228,8 @@ public:
     void addConsumingMTaskId(int id) { m_mtaskIds.insert(id); }
     const MTaskIdSet& mtaskIds() const { return m_mtaskIds; }
     string mtasksString() const;
+    void setMemLoc(size_t memLoc) { m_memLoc = memLoc; }
+    size_t memLoc() const { return m_memLoc; }
 };
 
 class AstDefParam final : public AstNode {
