@@ -8738,9 +8738,10 @@ private:
     bool m_dpiExportWrapper : 1;  // From dpi export; static function with dispatch table
     bool m_dpiImport : 1;  // From dpi import
     bool m_dpiImportWrapper : 1;  // Wrapper from dpi import
-    bool m_device : 1; // put to CUDA kernel
+    bool m_device : 1;  // put to CUDA kernel
     bool m_changeRequest : 1;
     bool m_ctorReset : 1;
+
 public:
     AstCFunc(FileLine* fl, const string& name, AstScope* scopep, const string& rtnType = "")
         : ASTGEN_SUPER_CFunc(fl) {
@@ -8862,51 +8863,35 @@ public:
                && finalsp() == nullptr;
     }
 
-    void putDevice() {
-      m_device = true;
-    }
+    void putDevice() { m_device = true; }
 
-    bool device() const {
-      return m_device;
-    }
+    bool device() const { return m_device; }
 
-    void setCtorReset() {
-      m_ctorReset = true;
-    }
+    void setCtorReset() { m_ctorReset = true; }
 
-    bool ctorReset() const {
-      return m_ctorReset;
-    }
-    
-    void cudaScope(const std::string& str) {
-      m_cudaScope = str;
-    }
+    bool ctorReset() const { return m_ctorReset; }
 
-    std::string cudaScope() const {
-      return m_cudaScope;
-    }
+    void cudaScope(const std::string& str) { m_cudaScope = str; }
 
-    void changeRequest(bool isChange) {
-      m_changeRequest = isChange;
-    }
+    std::string cudaScope() const { return m_cudaScope; }
 
-    bool changeRequest() const {
-      return m_changeRequest;
-    }
+    void changeRequest(bool isChange) { m_changeRequest = isChange; }
+
+    bool changeRequest() const { return m_changeRequest; }
 };
 
-//class AstCudaAssign final : public AstNodeStmt {
+// class AstCudaAssign final : public AstNodeStmt {
 
-  //public:
-    
-    //AstCudaAssign(Fileline* f1, const std::string& lhs, AstNode* rhs): ASTGEN_SUPER(f1), m_lhs(lhs) {
-        //setOp1p(rhs);
-    //}
+// public:
 
-    //AstNode* 
+// AstCudaAssign(Fileline* f1, const std::string& lhs, AstNode* rhs): ASTGEN_SUPER(f1), m_lhs(lhs)
+// { setOp1p(rhs);
+//}
 
-  //private:
-    //std::string m_lhs;
+// AstNode*
+
+// private:
+// std::string m_lhs;
 //};
 
 class AstCCall final : public AstNodeCCall {

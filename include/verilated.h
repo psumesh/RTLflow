@@ -304,7 +304,6 @@ public:
 #define RF_OUT(name, msb, lsb) size_t name  ///< Declare output signal, 17-32 bits
 //#define RF_OUTW(name, msb, lsb), words size_t name[words]  ///< Declare output signal, 65+ bits
 
-
 #define VL_CELL(instname, type)  ///< Declare a cell, ala SP_CELL
 
 ///< Declare a module, ala SC_MODULE

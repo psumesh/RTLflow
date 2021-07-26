@@ -88,7 +88,6 @@ public:
     void print(QData addr, bool addrstamp, const void* valuep);
 };
 
-
 //===================================================================
 /// Verilog wide unpacked bit container.
 /// Similar to std::array<WData, N>, but lighter weight, only methods needed
