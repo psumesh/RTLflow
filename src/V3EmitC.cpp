@@ -298,7 +298,8 @@ public:
                 puts("friend __global__ void ");
                 puts(protect(mtp->cFuncName()));
                 // RTLflow
-                puts("(void* symtab, CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, IData* change);\n");
+                puts("(void* symtab, CData* _csignals, SData* _ssignals, IData* _isignals, QData* "
+                     "_qsignals, IData* change);\n");
             }
             // No AstCFunc for this one, as it's synthetic. Just write it:
             //  RTLflow
@@ -863,21 +864,21 @@ public:
         iterateAndNextNull(nodep->resultp());
         puts(")");
     }
-// TODO: use taskflow to stop/finish operations
+    // TODO: use taskflow to stop/finish operations
     virtual void visit(AstStop* nodep) override {
-        //puts("VL_STOP_MT(");
-        //putsQuoted(protect(nodep->fileline()->filename()));
-        //puts(", ");
-        //puts(cvtToStr(nodep->fileline()->lineno()));
-        //puts(", \"\"");
-        //puts(");\n");
+        // puts("VL_STOP_MT(");
+        // putsQuoted(protect(nodep->fileline()->filename()));
+        // puts(", ");
+        // puts(cvtToStr(nodep->fileline()->lineno()));
+        // puts(", \"\"");
+        // puts(");\n");
     }
     virtual void visit(AstFinish* nodep) override {
-        //puts("VL_FINISH_MT(");
-        //putsQuoted(protect(nodep->fileline()->filename()));
-        //puts(", ");
-        //puts(cvtToStr(nodep->fileline()->lineno()));
-        //puts(", \"\");\n");
+        // puts("VL_FINISH_MT(");
+        // putsQuoted(protect(nodep->fileline()->filename()));
+        // puts(", ");
+        // puts(cvtToStr(nodep->fileline()->lineno()));
+        // puts(", \"\");\n");
     }
     virtual void visit(AstPrintTimeScale* nodep) override {
         puts("VL_PRINTTIMESCALE(");
@@ -994,12 +995,12 @@ public:
         }
         m_isSimple = true;
     }
-    //virtual void visit(AstExtend* nodep) override {
-        //m_isSimple = false;
-        //emitOpName(nodep, nodep->emitC(), nodep->lhsp(), nodep->rhsp(), nodep->thsp());
-        //m_isSimple = true;
+    // virtual void visit(AstExtend* nodep) override {
+    // m_isSimple = false;
+    // emitOpName(nodep, nodep->emitC(), nodep->lhsp(), nodep->rhsp(), nodep->thsp());
+    // m_isSimple = true;
     //}
-  
+
     virtual void visit(AstNodeTriop* nodep) override {
         m_isSimple = false;
         UASSERT_OBJ(!emitSimpleOk(nodep), nodep, "Triop cannot be described in a simple way");
@@ -1018,7 +1019,7 @@ public:
         }
     }
     virtual void visit(AstCCast* nodep) override {
-         //Extending a value of the same word width is just a NOP.
+        // Extending a value of the same word width is just a NOP.
         if (nodep->size() <= VL_IDATASIZE) {
             puts("(IData)(");
         } else {
@@ -1074,27 +1075,29 @@ public:
     }
     virtual void visit(AstArraySel* nodep) override {
         // Note ASSIGN checks for this on a LHS
-        if(auto* varRefp = VN_CAST(nodep->fromp(), VarRef)) {
-          auto* varp = varRefp->varp();
-          if((varp->isSignal() || varp->isClassMember() || varp->isTemp()) && !varp->isMovableToBlock() && !varp->isStatementTemp() && !varp->isLocal()) {
-            m_isSel = true;
-            emitOpName(nodep, nodep->emitCuda(), nodep->fromp(), nodep->bitp(), nullptr);
-            m_isSel = false;
-            return;
-          }
+        if (auto* varRefp = VN_CAST(nodep->fromp(), VarRef)) {
+            auto* varp = varRefp->varp();
+            if ((varp->isSignal() || varp->isClassMember() || varp->isTemp())
+                && !varp->isMovableToBlock() && !varp->isStatementTemp() && !varp->isLocal()) {
+                m_isSel = true;
+                emitOpName(nodep, nodep->emitCuda(), nodep->fromp(), nodep->bitp(), nullptr);
+                m_isSel = false;
+                return;
+            }
         }
         emitOpName(nodep, nodep->emitC(), nodep->fromp(), nodep->bitp(), nullptr);
     }
     virtual void visit(AstWordSel* nodep) override {
         // Note ASSIGN checks for this on a LHS
-        if(auto* varRefp = VN_CAST(nodep->fromp(), VarRef)) {
-          auto* varp = varRefp->varp();
-          if((varp->isSignal() || varp->isClassMember() || varp->isTemp()) && !varp->isMovableToBlock() && !varp->isStatementTemp() && !varp->isLocal()) {
-            m_isSel = true;
-            emitOpName(nodep, nodep->emitCuda(), nodep->fromp(), nodep->bitp(), nullptr);
-            m_isSel = false;
-            return;
-          }
+        if (auto* varRefp = VN_CAST(nodep->fromp(), VarRef)) {
+            auto* varp = varRefp->varp();
+            if ((varp->isSignal() || varp->isClassMember() || varp->isTemp())
+                && !varp->isMovableToBlock() && !varp->isStatementTemp() && !varp->isLocal()) {
+                m_isSel = true;
+                emitOpName(nodep, nodep->emitCuda(), nodep->fromp(), nodep->bitp(), nullptr);
+                m_isSel = false;
+                return;
+            }
         }
         emitOpName(nodep, nodep->emitC(), nodep->fromp(), nodep->bitp(), nullptr);
     }
@@ -1174,58 +1177,51 @@ public:
     // Terminals
     virtual void visit(AstVarRef* nodep) override {
         auto* varp = nodep->varp();
-        if((varp->isSignal() || varp->isClassMember() || varp->isTemp()) && !varp->isStatementTemp() && !varp->isLocal()) {
-          if(varp->widthMin() <= 8) {
-            puts("_csignals");
-          } 
-          else if (varp->widthMin() <= 16) {
-            puts("_ssignals");
-          }
-          else if(varp->isQuad()) {
-            puts("_qsignals");
-          }
-          else {
-            // IData
-            puts("_isignals");
-          }
-
-          if(m_isSimple) {
-            puts("[");
-          }
-          else {
-            puts(" + ");
-          }
-
-          if(m_isGpu) {
-            puts("threadIdx.x");
-          } 
-          else {
-            puts("i");
-          }
-
-          if (AstUnpackArrayDType* adtypep = VN_CAST(varp->dtypeSkipRefp(), UnpackArrayDType)) {
-            puts(" * " + cvtToStr(adtypep->arrayUnpackedElements()));
-            if(adtypep->subDTypep()->isWide()) {
-              puts(" * " + cvtToStr(adtypep->subDTypep()->widthWords()));
+        if ((varp->isSignal() || varp->isClassMember() || varp->isTemp())
+            && !varp->isStatementTemp() && !varp->isLocal()) {
+            if (varp->widthMin() <= 8) {
+                puts("_csignals");
+            } else if (varp->widthMin() <= 16) {
+                puts("_ssignals");
+            } else if (varp->isQuad()) {
+                puts("_qsignals");
+            } else {
+                // IData
+                puts("_isignals");
             }
-          }
-          else if(varp->isWide()) {
-            puts(" * " + cvtToStr(varp->widthWords()));
-          }
-          puts(" + ");
 
-          puts("Num_Testbenches * " + cvtToStr(varp->memLoc()));
+            if (m_isSimple) {
+                puts("[");
+            } else {
+                puts(" + ");
+            }
 
-          if(!m_isSel && m_isSimple) {
-            puts("]");
-          }
-          else {
-            m_isSel = false;
-          }
-        }
-        else {
-          puts(nodep->hiernameProtect());
-          puts(varp->nameProtect());
+            if (m_isGpu) {
+                puts("threadIdx.x");
+            } else {
+                puts("i");
+            }
+
+            if (AstUnpackArrayDType* adtypep = VN_CAST(varp->dtypeSkipRefp(), UnpackArrayDType)) {
+                puts(" * " + cvtToStr(adtypep->arrayUnpackedElements()));
+                if (adtypep->subDTypep()->isWide()) {
+                    puts(" * " + cvtToStr(adtypep->subDTypep()->widthWords()));
+                }
+            } else if (varp->isWide()) {
+                puts(" * " + cvtToStr(varp->widthWords()));
+            }
+            puts(" + ");
+
+            puts("Num_Testbenches * " + cvtToStr(varp->memLoc()));
+
+            if (!m_isSel && m_isSimple) {
+                puts("]");
+            } else {
+                m_isSel = false;
+            }
+        } else {
+            puts(nodep->hiernameProtect());
+            puts(varp->nameProtect());
         }
     }
     void emitCvtPackStr(AstNode* nodep) {
@@ -1635,7 +1631,8 @@ class EmitCImp final : public EmitCStmts {
         puts("__global__\n");
         puts("void ");
         puts(protect(mtp->cFuncName()));
-        puts("(void* symtab, CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, IData* change) {\n");
+        puts("(void* symtab, CData* _csignals, SData* _ssignals, IData* _isignals, QData* "
+             "_qsignals, IData* change) {\n");
 
         // Declare and set vlSymsp
         puts("if(!change[threadIdx.x]) return;\n");
@@ -1712,8 +1709,8 @@ class EmitCImp final : public EmitCStmts {
         emitVarList(nodep->initsp(), EVL_FUNC_ALL, "", section /*ref*/);
         emitVarList(nodep->stmtsp(), EVL_FUNC_ALL, "", section /*ref*/);
 
-        if (!nodep->device() && (nodep != v3Global.rootp()->initp())) { 
-          puts("for(size_t i = 0; i < Num_Testbenches; ++i) {\n"); 
+        if (!nodep->device() && (nodep != v3Global.rootp()->initp())) {
+            puts("for(size_t i = 0; i < Num_Testbenches; ++i) {\n");
         }
 
         iterateAndNextNull(nodep->initsp());
@@ -1723,8 +1720,8 @@ class EmitCImp final : public EmitCStmts {
 
         if (!m_blkChangeDetVec.empty()) emitChangeDet();
 
-        if (!nodep->device() && (nodep == v3Global.rootp()->initp())) { 
-          puts("for(size_t i = 0; i < Num_Testbenches; ++i) {\n"); 
+        if (!nodep->device() && (nodep == v3Global.rootp()->initp())) {
+            puts("for(size_t i = 0; i < Num_Testbenches; ++i) {\n");
         }
 
         if (nodep->finalsp()) putsDecoration("// Final\n");
@@ -1908,18 +1905,15 @@ class EmitCImp final : public EmitCStmts {
         AstNodeDType* const dtypep = varp->dtypep()->skipRefp();
 
         string signals;
-        if(dtypep->widthMin() <= 8) {
-          signals = "_csignals";
-        } 
-        else if (dtypep->widthMin() <= 16) {
-          signals = "_ssignals";
-        }
-        else if(dtypep->isQuad()) {
-          signals = "_qsignals";
-        }
-        else {
-          // IData
-          signals = "_isignals";
+        if (dtypep->widthMin() <= 8) {
+            signals = "_csignals";
+        } else if (dtypep->widthMin() <= 16) {
+            signals = "_ssignals";
+        } else if (dtypep->isQuad()) {
+            signals = "_qsignals";
+        } else {
+            // IData
+            signals = "_isignals";
         }
 
         const string varNameProtected
@@ -1937,14 +1931,18 @@ class EmitCImp final : public EmitCStmts {
                 if (initarp->defaultp()) {
                     puts("for (int __Vi=0; __Vi<" + cvtToStr(adtypep->elementsConst()));
                     puts("; ++__Vi) {\n");
-                    emitSetVarConstant(signals + "[i * " + cvtToStr(adtypep->declRange().elements()) + " + " + varNameProtected + " + __Vi]",
+                    emitSetVarConstant(signals + "[i * "
+                                           + cvtToStr(adtypep->declRange().elements()) + " + "
+                                           + varNameProtected + " + __Vi]",
                                        VN_CAST(initarp->defaultp(), Const));
                     puts("}\n");
                 }
                 const AstInitArray::KeyItemMap& mapr = initarp->map();
                 for (const auto& itr : mapr) {
                     AstNode* valuep = itr.second->valuep();
-                    emitSetVarConstant(signals + "[i * " + cvtToStr(adtypep->declRange().elements()) + " + " + varNameProtected + " + " + cvtToStr(itr.first) + "]",
+                    emitSetVarConstant(signals + "[i * "
+                                           + cvtToStr(adtypep->declRange().elements()) + " + "
+                                           + varNameProtected + " + " + cvtToStr(itr.first) + "]",
                                        VN_CAST(valuep, Const));
                 }
             } else {
@@ -1960,18 +1958,15 @@ class EmitCImp final : public EmitCStmts {
         dtypep = dtypep->skipRefp();
         AstBasicDType* basicp = dtypep->basicp();
         string signals;
-        if(dtypep->widthMin() <= 8) {
-          signals = "_csignals";
-        } 
-        else if (dtypep->widthMin() <= 16) {
-          signals = "_ssignals";
-        }
-        else if(dtypep->isQuad()) {
-          signals = "_qsignals";
-        }
-        else {
-          // IData
-          signals = "_isignals";
+        if (dtypep->widthMin() <= 8) {
+            signals = "_csignals";
+        } else if (dtypep->widthMin() <= 16) {
+            signals = "_ssignals";
+        } else if (dtypep->isQuad()) {
+            signals = "_qsignals";
+        } else {
+            // IData
+            signals = "_isignals";
         }
         // Returns string to do resetting, empty to do nothing (which caller should handle)
         if (AstAssocArrayDType* adtypep = VN_CAST(dtypep, AssocArrayDType)) {
@@ -2018,11 +2013,13 @@ class EmitCImp final : public EmitCStmts {
                     AstConst* const constp = VN_CAST(varp->valuep(), Const);
                     if (!constp) varp->v3fatalSrc("non-const initializer for variable");
                     for (int w = 0; w < varp->widthWords(); ++w) {
-                        if(suffix.empty()) {
-                          out += signals + "[i * " + cvtToStr(varp->widthWords()) + " + " + varNameProtected + " + " + cvtToStr(w) + "] = ";
-                        }
-                        else {
-                          out += signals + "[i * " + cvtToStr(varp->widthWords()) + " + " + varNameProtected + " + " + suffix + " + " + cvtToStr(w) + "] = ";
+                        if (suffix.empty()) {
+                            out += signals + "[i * " + cvtToStr(varp->widthWords()) + " + "
+                                   + varNameProtected + " + " + cvtToStr(w) + "] = ";
+                        } else {
+                            out += signals + "[i * " + cvtToStr(varp->widthWords()) + " + "
+                                   + varNameProtected + " + " + suffix + " + " + cvtToStr(w)
+                                   + "] = ";
                         }
                         out += cvtToStr(constp->num().edataWord(w)) + "U;\n";
                     }
@@ -2035,13 +2032,13 @@ class EmitCImp final : public EmitCStmts {
             } else {
                 string out;
                 if (AstUnpackArrayDType* adtypep = VN_CAST(varp->dtypep(), UnpackArrayDType)) {
-                  out = signals + "[i * " + cvtToStr(adtypep->elementsConst()) + " + " + varNameProtected;
-                }
-                else if(varp->isWide()){
-                  out = signals + "[i * " + cvtToStr(varp->widthWords()) + " + " + varNameProtected;
-                }
-                else {
-                  out = signals + "[i + " + varNameProtected;
+                    out = signals + "[i * " + cvtToStr(adtypep->elementsConst()) + " + "
+                          + varNameProtected;
+                } else if (varp->isWide()) {
+                    out = signals + "[i * " + cvtToStr(varp->widthWords()) + " + "
+                          + varNameProtected;
+                } else {
+                    out = signals + "[i + " + varNameProtected;
                 }
                 (suffix.empty()) ? out += "]" : out += " + " + suffix + "]";
                 // If --x-initial-edge is set, we want to force an initial
@@ -2164,21 +2161,22 @@ void EmitCStmts::emitVarDecl(const AstVar* nodep, const string& prefixIfImp) {
                                   && name.substr(name.size() - suffix.size()) == suffix;
             if (beStatic) puts("static VL_THREAD_LOCAL ");
         }
-        
-        if((nodep->isSignal() || nodep->isClassMember() || nodep->isTemp()) && !nodep->isStatementTemp() && !nodep->isLocal()) {
-          //if(nodep->isStatic()) puts("static ");
-          puts("size_t ");
-          //if(!prefixIfImp.empty()) puts(prefixIfImp + "::");
-          puts(nodep->nameProtect());
-        }
-        else {
-          puts(nodep->vlArgType(true, false, false, prefixIfImp));
+
+        if ((nodep->isSignal() || nodep->isClassMember() || nodep->isTemp())
+            && !nodep->isStatementTemp() && !nodep->isLocal()) {
+            // if(nodep->isStatic()) puts("static ");
+            puts("size_t ");
+            // if(!prefixIfImp.empty()) puts(prefixIfImp + "::");
+            puts(nodep->nameProtect());
+        } else {
+            puts(nodep->vlArgType(true, false, false, prefixIfImp));
         }
     }
 
-    if((nodep->isSignal() || nodep->isClassMember() || nodep->isTemp()) && !nodep->isStatementTemp() && !nodep->isLocal()) {
-      //size_t mem_size{0};
-      //size_t words{1};
+    if ((nodep->isSignal() || nodep->isClassMember() || nodep->isTemp())
+        && !nodep->isStatementTemp() && !nodep->isLocal()) {
+        // size_t mem_size{0};
+        // size_t words{1};
 
         // auto type_size = [](const AstNodeDType* dtypep){
         ////std::string type;
@@ -2202,53 +2200,49 @@ void EmitCStmts::emitVarDecl(const AstVar* nodep, const string& prefixIfImp) {
         ////type += ", Num_Testbenches";
         ////type += ">";
         ////mem_size = std::get<1>(type_mem);
-        //mem_size = type_size(adtypep->subDTypep());
-        //words = adtypep->declRange().elements();
-      //}
-      //else {
-        //mem_size = type_size(dtypep);
-      //}
-      //else if (dtypep->isQuad()) {
-          //mem_size = sizeof(QData);
-      //} 
-      //else if (dtypep->widthMin() <= 8) {
-          //type = "CData*";
-          //mem_size = sizeof(CData);
-      //} 
-      //else if (dtypep->widthMin() <= 16) {
-          //type = "SData*";
-          //mem_size = sizeof(SData);
-      //} 
-      //else if (dtypep->widthMin() <= VL_IDATASIZE) {
-          //type = "IData*";
-          //mem_size = sizeof(IData);
-      //}
-      //else if (dtypep->isWide()) {
-          //type = "EData*";
-          //mem_size = sizeof(EData);
-          //words = dtypep->widthWords();
-      //}
-      //puts("{(" + type + "*)(_rtlflow._signals  + " + cvtToStr(cuda_mem_counter) + "* Num_Testbenches)}");
-      const AstNodeDType* dtypep = nodep->dtypep()->skipRefp();
-      puts("{" + cvtToStr(nodep->memLoc()) + " * Num_Testbenches}");
-      if(dtypep->isQuad()) {
-        puts("/*QData*/");
-      }
-      else if (dtypep->widthMin() <= 8) {
-        puts("/*CData*/");
-      } 
-      else if (dtypep->widthMin() <= 16) {
-        puts("/*SData*/");
-      } 
-      else if (dtypep->widthMin() <= VL_IDATASIZE) {
-        puts("/*IData*/");
-      }
-      else if (dtypep->isWide()) {
-        puts("/*IData, wide*/");
-      }
-      else if (const AstUnpackArrayDType* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-        puts("/*Array*/");
-      }
+        // mem_size = type_size(adtypep->subDTypep());
+        // words = adtypep->declRange().elements();
+        //}
+        // else {
+        // mem_size = type_size(dtypep);
+        //}
+        // else if (dtypep->isQuad()) {
+        // mem_size = sizeof(QData);
+        //}
+        // else if (dtypep->widthMin() <= 8) {
+        // type = "CData*";
+        // mem_size = sizeof(CData);
+        //}
+        // else if (dtypep->widthMin() <= 16) {
+        // type = "SData*";
+        // mem_size = sizeof(SData);
+        //}
+        // else if (dtypep->widthMin() <= VL_IDATASIZE) {
+        // type = "IData*";
+        // mem_size = sizeof(IData);
+        //}
+        // else if (dtypep->isWide()) {
+        // type = "EData*";
+        // mem_size = sizeof(EData);
+        // words = dtypep->widthWords();
+        //}
+        // puts("{(" + type + "*)(_rtlflow._signals  + " + cvtToStr(cuda_mem_counter) + "*
+        // Num_Testbenches)}");
+        const AstNodeDType* dtypep = nodep->dtypep()->skipRefp();
+        puts("{" + cvtToStr(nodep->memLoc()) + " * Num_Testbenches}");
+        if (dtypep->isQuad()) {
+            puts("/*QData*/");
+        } else if (dtypep->widthMin() <= 8) {
+            puts("/*CData*/");
+        } else if (dtypep->widthMin() <= 16) {
+            puts("/*SData*/");
+        } else if (dtypep->widthMin() <= VL_IDATASIZE) {
+            puts("/*IData*/");
+        } else if (dtypep->isWide()) {
+            puts("/*IData, wide*/");
+        } else if (const AstUnpackArrayDType* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
+            puts("/*Array*/");
+        }
     }
     puts(";\n");
 }
@@ -2757,7 +2751,8 @@ void EmitCImp::emitCtorImp(AstNodeModule* modp) {
         first = false;  // printed the first ':'
     } else {
         puts(prefixNameProtect(modp) + "::" + prefixNameProtect(modp)
-             + "(CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, const char* _vcname__)\n");
+             + "(CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, const "
+               "char* _vcname__)\n");
         puts("    : VerilatedModule(_vcname__)\n");
     }
     emitVarCtors(&first);
@@ -2776,11 +2771,12 @@ void EmitCImp::emitCtorImp(AstNodeModule* modp) {
         puts("\n");
     }
     putsDecoration("// Reset structure values\n");
-    if(modp->isTop()) {
-      puts(protect("_ctor_var_reset") + "(this, _rtlflow._csignals, _rtlflow._ssignals, _rtlflow._isignals, _rtlflow._qsignals);\n");
-    }
-    else {
-      puts(protect("_ctor_var_reset") + "(this, _csignals, _ssignals, _isignals, _qsignals);\n");
+    if (modp->isTop()) {
+        puts(protect("_ctor_var_reset")
+             + "(this, _rtlflow._csignals, _rtlflow._ssignals, _rtlflow._isignals, "
+               "_rtlflow._qsignals);\n");
+    } else {
+        puts(protect("_ctor_var_reset") + "(this, _csignals, _ssignals, _isignals, _qsignals);\n");
     }
     emitTextSection(AstType::atScCtor);
 
@@ -3007,7 +3003,9 @@ void EmitCImp::emitCellCtors(AstNodeModule* modp) {
         // Must be before other constructors, as __vlCoverInsert calls it
         // Note _vcontextp__ may be nullptr, VerilatedSyms::VerilatedSyms cleans it up
         puts(EmitCBaseVisitor::symClassVar() + " = __VlSymsp = new " + symClassName() + "("
-             + (optSystemC() ? "nullptr" : "_vcontextp__") + ", this, _rtlflow._csignals, _rtlflow._ssignals, _rtlflow._isignals, _rtlflow._qsignals, name());\n");
+             + (optSystemC() ? "nullptr" : "_vcontextp__")
+             + ", this, _rtlflow._csignals, _rtlflow._ssignals, _rtlflow._isignals, "
+               "_rtlflow._qsignals, name());\n");
         puts(EmitCBaseVisitor::symTopAssign() + "\n");
     }
     for (AstNode* nodep = modp->stmtsp(); nodep; nodep = nodep->nextp()) {
@@ -3182,16 +3180,16 @@ void EmitCImp::emitWrapEval(AstNodeModule* modp) {
     //}
 
     //
-    //puts("\nvoid " + prefixNameProtect(modp) + "::" + protect("_eval_initial_loop") + "("
-         //+ EmitCBaseVisitor::symClassVar() + ") {\n");
+    // puts("\nvoid " + prefixNameProtect(modp) + "::" + protect("_eval_initial_loop") + "("
+    //+ EmitCBaseVisitor::symClassVar() + ") {\n");
     // puts("vlSymsp->__Vm_didInit = true;\n");
     // puts(protect("_eval_initial") + "(vlSymsp);\n");
     // if (v3Global.opt.trace()) puts("vlSymsp->__Vm_activity = true;\n");
     // emitSettleLoop((protect("_eval_settle") + "(vlSymsp);\n"  //
     //+ protect("_eval") + "(vlSymsp);"),
     // true);
-    //puts("}\n");
-    //splitSizeInc(10);
+    // puts("}\n");
+    // splitSizeInc(10);
 }
 
 //----------------------------------------------------------------------
@@ -3227,8 +3225,9 @@ void EmitCStmts::emitVarList(AstNode* firstp, EisWhich which, const string& pref
                     doit = (varp->isParam() && !VN_IS(varp->valuep(), Const));
                     break;
                 case EVL_CLASS_ALL: doit = true; break;
-                case EVL_NOT_CUDA: 
-                    doit = !((varp->isSignal() || varp->isClassMember() || varp->isTemp()) && !varp->isStatementTemp() && !varp->isLocal()); 
+                case EVL_NOT_CUDA:
+                    doit = !((varp->isSignal() || varp->isClassMember() || varp->isTemp())
+                             && !varp->isStatementTemp() && !varp->isLocal());
                     break;
                 case EVL_FUNC_ALL: doit = true; break;
                 default: v3fatalSrc("Bad Case");
@@ -3579,7 +3578,9 @@ void EmitCImp::emitInt(AstNodeModule* modp) {
                 // TODO move all constructor definition to e.g. V3CUse
                 puts(prefixNameProtect(modp) + "();\n");
             } else {
-                puts(prefixNameProtect(modp) + "(CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, const char* name = \"TOP\");\n");
+                puts(prefixNameProtect(modp)
+                     + "(CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, "
+                       "const char* name = \"TOP\");\n");
             }
         }
         if (modp->isTop()) {
@@ -3645,8 +3646,9 @@ void EmitCImp::emitInt(AstNodeModule* modp) {
     puts("\n// INTERNAL METHODS\n");
     if (modp->isTop()) {
         ofp()->putsPrivate(false);  // public: as accessed by another VL_MODULE
-        //puts("static void " + protect("_eval_initial_loop") + "(" + EmitCBaseVisitor::symClassVar()
-             //+ ");\n");
+        // puts("static void " + protect("_eval_initial_loop") + "(" +
+        // EmitCBaseVisitor::symClassVar()
+        //+ ");\n");
         if (v3Global.needTraceDumper()) {
             if (!optSystemC()) puts("void _traceDump();\n");
             puts("void _traceDumpOpen();\n");
@@ -4273,65 +4275,59 @@ public:
     }
 };
 
-
 //######################################################################
 // EmitC class functions
 // RTLflow
 
 std::tuple<size_t, size_t, size_t, size_t> V3EmitC::cuda_mem() {
 
-  // count required cuda memory
-  size_t cuda_cmem_size{0};
-  size_t cuda_smem_size{0};
-  size_t cuda_imem_size{0};
-  size_t cuda_qmem_size{0};
+    // count required cuda memory
+    size_t cuda_cmem_size{0};
+    size_t cuda_smem_size{0};
+    size_t cuda_imem_size{0};
+    size_t cuda_qmem_size{0};
 
-  // TODO: I assume we don't have array of array
-  auto mem_assign = [&](const AstNodeDType* dtypep, AstVar* varp, size_t words = 1){
-    if(dtypep->widthMin() <= 8) {
-      varp->setMemLoc(cuda_cmem_size);
-      cuda_cmem_size += words;
-    } 
-    else if (dtypep->widthMin() <= 16) {
-      varp->setMemLoc(cuda_smem_size);
-      cuda_smem_size += words;
-    }
-    else if(dtypep->isQuad()) {
-      varp->setMemLoc(cuda_qmem_size);
-      cuda_qmem_size += words;
-    }
-    else if(dtypep->isWide()) {
-      varp->setMemLoc(cuda_imem_size);
-      cuda_imem_size += varp->widthWords() * words;
-    }
-    else {
-      // IData
-      varp->setMemLoc(cuda_imem_size);
-      cuda_imem_size += words;
-    }
-  };
-
-  for (AstNodeModule* modp = v3Global.rootp()->modulesp(); modp;
-    modp = VN_CAST(modp->nextp(), NodeModule)) {
-    if (VN_IS(modp, Class)) continue;  // Imped with ClassPackage // TODO What is this?
-    for (AstNode* nodep = modp->stmtsp(); nodep; nodep = nodep->nextp()) {
-      if (AstVar* varp = VN_CAST(nodep, Var)) {
-        if((varp->isSignal() || varp->isClassMember() || varp->isTemp()) && !varp->isStatementTemp() && !varp->isLocal()) {
-          // port ios, local signals, local variables
-
-          const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
-          if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-            mem_assign(adtypep->subDTypep(), varp, adtypep->declRange().elements()); 
-          }
-          else {
-            mem_assign(dtypep, varp);
-          }
-
+    // TODO: I assume we don't have array of array
+    auto mem_assign = [&](const AstNodeDType* dtypep, AstVar* varp, size_t words = 1) {
+        if (dtypep->widthMin() <= 8) {
+            varp->setMemLoc(cuda_cmem_size);
+            cuda_cmem_size += words;
+        } else if (dtypep->widthMin() <= 16) {
+            varp->setMemLoc(cuda_smem_size);
+            cuda_smem_size += words;
+        } else if (dtypep->isQuad()) {
+            varp->setMemLoc(cuda_qmem_size);
+            cuda_qmem_size += words;
+        } else if (dtypep->isWide()) {
+            varp->setMemLoc(cuda_imem_size);
+            cuda_imem_size += varp->widthWords() * words;
+        } else {
+            // IData
+            varp->setMemLoc(cuda_imem_size);
+            cuda_imem_size += words;
         }
-      }
+    };
+
+    for (AstNodeModule* modp = v3Global.rootp()->modulesp(); modp;
+         modp = VN_CAST(modp->nextp(), NodeModule)) {
+        if (VN_IS(modp, Class)) continue;  // Imped with ClassPackage // TODO What is this?
+        for (AstNode* nodep = modp->stmtsp(); nodep; nodep = nodep->nextp()) {
+            if (AstVar* varp = VN_CAST(nodep, Var)) {
+                if ((varp->isSignal() || varp->isClassMember() || varp->isTemp())
+                    && !varp->isStatementTemp() && !varp->isLocal()) {
+                    // port ios, local signals, local variables
+
+                    const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
+                    if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
+                        mem_assign(adtypep->subDTypep(), varp, adtypep->declRange().elements());
+                    } else {
+                        mem_assign(dtypep, varp);
+                    }
+                }
+            }
+        }
     }
-  }
-  return {cuda_cmem_size, cuda_smem_size, cuda_imem_size, cuda_qmem_size};
+    return {cuda_cmem_size, cuda_smem_size, cuda_imem_size, cuda_qmem_size};
 }
 
 // void V3EmitC::assign_mem_address(AstNodeModule* modp) {
@@ -4361,192 +4357,203 @@ std::tuple<size_t, size_t, size_t, size_t> V3EmitC::cuda_mem() {
 
 // topName is not in this scope
 // we need to find topname to replace hard coded VNV_nvdla
-void  V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_t cuda_imem_size, size_t cuda_qmem_size) {
-  string fileDir = v3Global.opt.makeDir() + "/";
-  string topClassName = v3Global.opt.prefix();
-  string filename = fileDir + "rtlflow.h";
+void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_t cuda_imem_size,
+                             size_t cuda_qmem_size) {
+    string fileDir = v3Global.opt.makeDir() + "/";
+    string topClassName = v3Global.opt.prefix();
+    string filename = fileDir + "rtlflow.h";
 
-  //newCFile(fileDir + "taskgraph.h", false , false);
-  AstCFile* cfilep = new AstCFile(v3Global.rootp()->fileline(), filename);
-  cfilep->slow(false);
-  cfilep->source(false);
-  v3Global.rootp()->addFilesp(cfilep);
+    // newCFile(fileDir + "taskgraph.h", false , false);
+    AstCFile* cfilep = new AstCFile(v3Global.rootp()->fileline(), filename);
+    cfilep->slow(false);
+    cfilep->source(false);
+    v3Global.rootp()->addFilesp(cfilep);
 
-  V3OutCFile of(filename);
-  of.putsGuard();
-  of.puts("\n#include <taskflow.hpp>\n");
-  of.puts("\n#include <cudaflow.hpp>\n");
+    V3OutCFile of(filename);
+    of.putsGuard();
+    of.puts("\n#include <taskflow.hpp>\n");
+    of.puts("\n#include <cudaflow.hpp>\n");
 
-  //of.puts("#include \""+ topClassName + ".h\"\n");
-  of.puts("class " + topClassName + "__Syms;\n");
-  of.puts("class " + topClassName + ";\n");
-  of.puts("class RTLflow {\n\n");
-  of.puts("typedef unsigned char CData;\n");
-  of.puts("typedef unsigned short int SData;\n");
-  of.puts("typedef uint32_t IData;\n");
-  of.puts("typedef unsigned long QData;\n");
-  of.puts("friend class " + topClassName + ";\n");
-  of.putsPrivate(true);
-  of.puts("tf::Taskflow _taskflow;\n");
-  of.puts("tf::cudaFlow _cudaflow;\n");
-  of.puts("tf::Executor _executor{8};\n");
-  of.puts("size_t cuda_cmem_size{" + cvtToStr(cuda_cmem_size) + "};\n");
-  of.puts("size_t cuda_smem_size{" + cvtToStr(cuda_smem_size) + "};\n");
-  of.puts("size_t cuda_imem_size{" + cvtToStr(cuda_imem_size) + "};\n");
-  of.puts("size_t cuda_qmem_size{" + cvtToStr(cuda_qmem_size) + "};\n");
-  of.puts("size_t num_testbenches;\n");
-  of.puts("IData* change{nullptr};\n");
-  of.puts("int loop{0};\n");
-  of.puts("bool init{false};\n");
+    // of.puts("#include \""+ topClassName + ".h\"\n");
+    of.puts("class " + topClassName + "__Syms;\n");
+    of.puts("class " + topClassName + ";\n");
+    of.puts("class RTLflow {\n\n");
+    of.puts("typedef unsigned char CData;\n");
+    of.puts("typedef unsigned short int SData;\n");
+    of.puts("typedef uint32_t IData;\n");
+    of.puts("typedef unsigned long QData;\n");
+    of.puts("friend class " + topClassName + ";\n");
+    of.putsPrivate(true);
+    of.puts("tf::Taskflow _taskflow;\n");
+    of.puts("tf::cudaFlow _cudaflow;\n");
+    of.puts("tf::Executor _executor{8};\n");
+    of.puts("size_t cuda_cmem_size{" + cvtToStr(cuda_cmem_size) + "};\n");
+    of.puts("size_t cuda_smem_size{" + cvtToStr(cuda_smem_size) + "};\n");
+    of.puts("size_t cuda_imem_size{" + cvtToStr(cuda_imem_size) + "};\n");
+    of.puts("size_t cuda_qmem_size{" + cvtToStr(cuda_qmem_size) + "};\n");
+    of.puts("size_t num_testbenches;\n");
+    of.puts("IData* change{nullptr};\n");
+    of.puts("int loop{0};\n");
+    of.puts("bool init{false};\n");
 
-  of.putsPrivate(false);
-  of.puts("CData* _csignals{nullptr};\n");
-  of.puts("SData* _ssignals{nullptr};\n");
-  of.puts("IData* _isignals{nullptr};\n");
-  of.puts("QData* _qsignals{nullptr};\n");
-  of.puts("RTLflow(size_t num_testbenches = 1);\n");
-  of.puts("~RTLflow();\n");
-  of.puts("void initialize(" + topClassName + "__Syms*);\n");  
-  of.puts("void run();\n");
-  of.puts("};\n\n");
+    of.putsPrivate(false);
+    of.puts("CData* _csignals{nullptr};\n");
+    of.puts("SData* _ssignals{nullptr};\n");
+    of.puts("IData* _isignals{nullptr};\n");
+    of.puts("QData* _qsignals{nullptr};\n");
+    of.puts("RTLflow(size_t num_testbenches = 1);\n");
+    of.puts("~RTLflow();\n");
+    of.puts("void initialize(" + topClassName + "__Syms*);\n");
+    of.puts("void run();\n");
+    of.puts("};\n\n");
 
-  of.puts("#endif  //\n");
+    of.puts("#endif  //\n");
 }
-void  V3EmitC::emitRTLflowImp() {
-  string fileDir = v3Global.opt.makeDir() + "/";
-  string topClassName = v3Global.opt.prefix();
-  string filename = fileDir + "rtlflow.cu";
+void V3EmitC::emitRTLflowImp() {
+    string fileDir = v3Global.opt.makeDir() + "/";
+    string topClassName = v3Global.opt.prefix();
+    string filename = fileDir + "rtlflow.cu";
 
-  //newCFile(fileDir + "taskgraph.h", false , false);
-  AstCFile* cfilep = new AstCFile(v3Global.rootp()->fileline(), filename);
-  cfilep->slow(false);
-  cfilep->source(true);
-  v3Global.rootp()->addFilesp(cfilep);
+    // newCFile(fileDir + "taskgraph.h", false , false);
+    AstCFile* cfilep = new AstCFile(v3Global.rootp()->fileline(), filename);
+    cfilep->slow(false);
+    cfilep->source(true);
+    v3Global.rootp()->addFilesp(cfilep);
 
-  V3OutCFile of(filename);
-  of.puts("\n#include <taskflow.hpp>\n");
-  of.puts("\n#include \"rtlflow.h\"\n\n");
-  of.puts("\n#include \"" + topClassName + ".h\"\n\n");
-  of.puts("__global__ void _eval_settle(" + topClassName + "__Syms* __restrict vlSymsp, CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals);\n");
+    V3OutCFile of(filename);
+    of.puts("\n#include <taskflow.hpp>\n");
+    of.puts("\n#include \"rtlflow.h\"\n\n");
+    of.puts("\n#include \"" + topClassName + ".h\"\n\n");
+    of.puts("__global__ void _eval_settle(" + topClassName
+            + "__Syms* __restrict vlSymsp, CData* _csignals, SData* _ssignals, IData* _isignals, "
+              "QData* _qsignals);\n");
 
-  of.puts("RTLflow::RTLflow(size_t num_testbenches):num_testbenches{num_testbenches} {\n"); 
-  of.puts("cudaMallocManaged(&_csignals, num_testbenches * cuda_cmem_size * sizeof(CData));\n");
-  of.puts("cudaMallocManaged(&_ssignals, num_testbenches * cuda_smem_size * sizeof(SData));\n");
-  of.puts("cudaMallocManaged(&_isignals, num_testbenches * cuda_imem_size * sizeof(IData));\n");
-  of.puts("cudaMallocManaged(&_qsignals, num_testbenches * cuda_qmem_size * sizeof(QData));\n");
-  of.puts("cudaMallocManaged(&change, num_testbenches * sizeof(IData));\n");
-  of.puts("cudaMemset(change, 1, num_testbenches * sizeof(IData));\n");
-  of.puts("}\n");
-  of.puts("RTLflow::~RTLflow() {\n");
-  of.puts("cudaFree(_csignals);\n");
-  of.puts("cudaFree(_ssignals);\n");
-  of.puts("cudaFree(_isignals);\n");
-  of.puts("cudaFree(_qsignals);\n");
-  of.puts("cudaFree(change);\n");
-  of.puts("}\n");
-  of.puts("void RTLflow::run() { _executor.run(_taskflow).wait(); }\n");
+    of.puts("RTLflow::RTLflow(size_t num_testbenches):num_testbenches{num_testbenches} {\n");
+    of.puts("cudaMallocManaged(&_csignals, num_testbenches * cuda_cmem_size * sizeof(CData));\n");
+    of.puts("cudaMallocManaged(&_ssignals, num_testbenches * cuda_smem_size * sizeof(SData));\n");
+    of.puts("cudaMallocManaged(&_isignals, num_testbenches * cuda_imem_size * sizeof(IData));\n");
+    of.puts("cudaMallocManaged(&_qsignals, num_testbenches * cuda_qmem_size * sizeof(QData));\n");
+    of.puts("cudaMallocManaged(&change, num_testbenches * sizeof(IData));\n");
+    of.puts("cudaMemset(change, 1, num_testbenches * sizeof(IData));\n");
+    of.puts("}\n");
+    of.puts("RTLflow::~RTLflow() {\n");
+    of.puts("cudaFree(_csignals);\n");
+    of.puts("cudaFree(_ssignals);\n");
+    of.puts("cudaFree(_isignals);\n");
+    of.puts("cudaFree(_qsignals);\n");
+    of.puts("cudaFree(change);\n");
+    of.puts("}\n");
+    of.puts("void RTLflow::run() { _executor.run(_taskflow).wait(); }\n");
 
-  of.puts("void RTLflow::initialize(" + topClassName + "__Syms* VlSymsp) {\n");
-  //of.puts(topClassName + "__Syms* __restrict vlSymsp = _mdoule->__VlSymsp;\n");
+    of.puts("void RTLflow::initialize(" + topClassName + "__Syms* VlSymsp) {\n");
+    // of.puts(topClassName + "__Syms* __restrict vlSymsp = _mdoule->__VlSymsp;\n");
 
-  AstExecGraph* execGraphp = v3Global.rootp()->execGraphp();
-  UASSERT_OBJ(execGraphp, v3Global.rootp(), "Root should have an execGraphp");
-  const V3Graph* depGraphp = execGraphp->depGraphp();
+    AstExecGraph* execGraphp = v3Global.rootp()->execGraphp();
+    UASSERT_OBJ(execGraphp, v3Global.rootp(), "Root should have an execGraphp");
+    const V3Graph* depGraphp = execGraphp->depGraphp();
 
-  // V3Graph does not have size() function
-  // I need to caculate graph size myself
-  of.puts("auto change_cut = _cudaflow.kernel(dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0, _change_request, VlSymsp, _csignals, _ssignals,   _isignals, _qsignals, change);\n");
-  of.puts("auto last_assign_cut = _cudaflow.kernel(dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0, _last_assign, _csignals, _ssignals, _isignals, _qsignals);\n");
-  of.puts("auto reduce_cut = _cudaflow.reduce(change, change + num_testbenches, change, [] __device__ (IData a, IData b){ return a | b; });\n");
-  of.puts("last_assign_cut.precede(change_cut);\n\n");
-  of.puts("change_cut.precede(reduce_cut);\n\n");
+    // V3Graph does not have size() function
+    // I need to caculate graph size myself
+    of.puts("auto change_cut = _cudaflow.kernel(dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0, "
+            "_change_request, VlSymsp, _csignals, _ssignals,   _isignals, _qsignals, change);\n");
+    of.puts("auto last_assign_cut = _cudaflow.kernel(dim3(1, 1, 1), dim3(num_testbenches, 1, 1), "
+            "0, _last_assign, _csignals, _ssignals, _isignals, _qsignals);\n");
+    of.puts("auto reduce_cut = _cudaflow.reduce(change, change + num_testbenches, change, [] "
+            "__device__ (IData a, IData b){ return a | b; });\n");
+    of.puts("last_assign_cut.precede(change_cut);\n\n");
+    of.puts("change_cut.precede(reduce_cut);\n\n");
 
+    // create tasks
+    for (const V3GraphVertex* vxp = depGraphp->verticesBeginp(); vxp; vxp = vxp->verticesNextp()) {
+        const ExecMTask* mtp = dynamic_cast<const ExecMTask*>(vxp);
+        of.puts("auto id_" + cvtToStr(mtp->id())
+                + "_cut = _cudaflow.kernel(dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0, "
+                + "__Vmtask__" + cvtToStr(mtp->id())
+                + ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
+    }
+    // puts("__Vchange = " + protect("_change_request") + "(vlSymsp);\n");
 
-  // create tasks
-  for (const V3GraphVertex* vxp = depGraphp->verticesBeginp(); vxp;
-   vxp = vxp->verticesNextp()) {
-      const ExecMTask* mtp = dynamic_cast<const ExecMTask*>(vxp);
-      of.puts("auto id_" + cvtToStr(mtp->id()) + 
-        "_cut = _cudaflow.kernel(dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0, " +
-        "__Vmtask__" + cvtToStr(mtp->id()) + ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n"
-      );
-  }
-    //puts("__Vchange = " + protect("_change_request") + "(vlSymsp);\n");
+    // dependencies
+    for (const V3GraphVertex* vxp = depGraphp->verticesBeginp(); vxp; vxp = vxp->verticesNextp()) {
+        const ExecMTask* mtp = dynamic_cast<const ExecMTask*>(vxp);
+        for (V3GraphEdge* edgep = mtp->outBeginp(); edgep; edgep = edgep->outNextp()) {
+            const ExecMTask* prevp = dynamic_cast<ExecMTask*>(edgep->top());
+            of.puts("id_" + cvtToStr(mtp->id()) + "_cut.precede(id_" + cvtToStr(prevp->id())
+                    + "_cut);\n");
+        }
 
-  // dependencies
-  for (const V3GraphVertex* vxp = depGraphp->verticesBeginp(); vxp;
-   vxp = vxp->verticesNextp()) {
-      const ExecMTask* mtp = dynamic_cast<const ExecMTask*>(vxp);
-      for (V3GraphEdge* edgep = mtp->outBeginp(); edgep; edgep = edgep->outNextp()) {
-          const ExecMTask* prevp = dynamic_cast<ExecMTask*>(edgep->top());
-          of.puts("id_" + cvtToStr(mtp->id()) + "_cut.precede(id_" + cvtToStr(prevp->id()) + "_cut);\n");
-      }
+        if (mtp->outBeginp() == nullptr) {
+            of.puts("id_" + cvtToStr(mtp->id()) + "_cut.precede(last_assign_cut);\n");
+        }
+    }
 
-      if(mtp->outBeginp() == nullptr) {
-        of.puts("id_" + cvtToStr(mtp->id()) + "_cut.precede(last_assign_cut);\n");
-      }
-  }
+    of.puts("auto start_t = _taskflow.emplace([&](){\n");
+    of.puts("if(VL_UNLIKELY(!init)) {\n");
+    of.puts(v3Global.opt.prefix()
+            + "::_eval_initial(VlSymsp, _csignals, _ssignals, _isignals, _qsignals);\n");
+    of.puts("int device;\n");
+    of.puts("cudaGetDevice(&device);\n");
+    of.puts("cudaMemPrefetchAsync(_csignals, num_testbenches * cuda_cmem_size * sizeof(CData), "
+            "device);\n");
+    of.puts("cudaMemPrefetchAsync(_ssignals, num_testbenches * cuda_smem_size * sizeof(SData), "
+            "device);\n");
+    of.puts("cudaMemPrefetchAsync(_isignals, num_testbenches * cuda_imem_size * sizeof(IData), "
+            "device);\n");
+    of.puts("cudaMemPrefetchAsync(_qsignals, num_testbenches * cuda_qmem_size * sizeof(QData), "
+            "device);\n");
+    of.puts("cudaMemPrefetchAsync(change, num_testbenches * sizeof(IData), device);\n");
+    of.puts("init = true;\n");
+    of.puts("return 0;\n");
+    of.puts("}\n");
+    of.puts("else {\n");
+    of.puts("return 1;\n");
+    of.puts("}\n");
+    of.puts("});\n\n");
 
-  of.puts("auto start_t = _taskflow.emplace([&](){\n");
-  of.puts("if(VL_UNLIKELY(!init)) {\n");
-  of.puts(v3Global.opt.prefix() + "::_eval_initial(VlSymsp, _csignals, _ssignals, _isignals, _qsignals);\n");
-  of.puts("int device;\n");
-  of.puts("cudaGetDevice(&device);\n");
-  of.puts("cudaMemPrefetchAsync(_csignals, num_testbenches * cuda_cmem_size * sizeof(CData), device);\n");
-  of.puts("cudaMemPrefetchAsync(_ssignals, num_testbenches * cuda_smem_size * sizeof(SData), device);\n");
-  of.puts("cudaMemPrefetchAsync(_isignals, num_testbenches * cuda_imem_size * sizeof(IData), device);\n");
-  of.puts("cudaMemPrefetchAsync(_qsignals, num_testbenches * cuda_qmem_size * sizeof(QData), device);\n");
-  of.puts("cudaMemPrefetchAsync(change, num_testbenches * sizeof(IData), device);\n");
-  of.puts("init = true;\n");
-  of.puts("return 0;\n");
-  of.puts("}\n");
-  of.puts("else {\n");
-  of.puts("return 1;\n");
-  of.puts("}\n");
-  of.puts("});\n\n");
+    of.puts("auto init_detect_t = _taskflow.emplace([&](){\n");
+    of.puts("if(++loop > 100) {\n");
+    of.puts("_change_request<<<dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0>>>(VlSymsp, "
+            "_csignals, _ssignals, _isignals, _qsignals, change);\n");
+    of.puts("cudaDeviceSynchronize();\n");
+    of.puts("VL_FATAL_MT(\"add.v\", 2, \"\",\n");
+    of.puts("\"Verilated model didn't converge\"\n");
+    of.puts("\"- See https://verilator.org/warn/DIDNOTCONVERGE\");\n");
+    of.puts("}\n");
+    of.puts("return (bool)change[0];\n");
+    of.puts("});\n");
 
-  of.puts("auto init_detect_t = _taskflow.emplace([&](){\n");
-  of.puts("if(++loop > 100) {\n");
-  of.puts("_change_request<<<dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0>>>(VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
-  of.puts("cudaDeviceSynchronize();\n");
-  of.puts("VL_FATAL_MT(\"add.v\", 2, \"\",\n");
-  of.puts("\"Verilated model didn't converge\"\n");
-  of.puts("\"- See https://verilator.org/warn/DIDNOTCONVERGE\");\n");
-  of.puts("}\n");
-  of.puts("return (bool)change[0];\n");
-  of.puts("});\n");
+    of.puts("auto init_sim_t = _taskflow.emplace([&](){\n");
+    of.puts("_eval_settle<<<dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0>>>(VlSymsp, _csignals, "
+            "_ssignals, _isignals, _qsignals);\n");
+    of.puts("cudaDeviceSynchronize();\n");
+    of.puts("_cudaflow.offload();\n");
+    of.puts("});\n");
 
-  of.puts("auto init_sim_t = _taskflow.emplace([&](){\n");
-  of.puts("_eval_settle<<<dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0>>>(VlSymsp, _csignals, _ssignals, _isignals, _qsignals);\n");
-  of.puts("cudaDeviceSynchronize();\n");
-  of.puts("_cudaflow.offload();\n");
-  of.puts("});\n");
+    of.puts("auto sim_t = _taskflow.emplace([&](){\n");
+    of.puts("_cudaflow.offload();\n");
+    of.puts("});\n");
+    of.puts("auto end_t = _taskflow.emplace([&](){\n");
+    of.puts("loop = 0;\n");
+    of.puts("cudaMemset(change, 1, sizeof(IData) * num_testbenches);\n");
+    of.puts("});\n\n");
+    of.puts("auto detect_t = _taskflow.emplace([&](){\n");
+    of.puts("if(++loop > 100) {\n");
+    of.puts("_change_request<<<dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0>>>(VlSymsp, "
+            "_csignals, _ssignals, _isignals, _qsignals, change);\n");
+    of.puts("cudaDeviceSynchronize();\n");
+    of.puts("VL_FATAL_MT(\"add.v\", 2, \"\",\n");
+    of.puts("\"Verilated model didn't converge\"\n");
+    of.puts("\"- See https://verilator.org/warn/DIDNOTCONVERGE\");\n");
+    of.puts("}\n");
+    of.puts("return (bool)change[0];\n");
+    of.puts("});\n");
+    of.puts("start_t.precede(init_sim_t, sim_t);\n");
+    of.puts("init_sim_t.precede(init_detect_t);\n");
+    of.puts("init_detect_t.precede(end_t, init_sim_t);\n\n");
+    of.puts("sim_t.precede(detect_t);\n");
+    of.puts("detect_t.precede(end_t, sim_t);\n");
 
-
-  of.puts("auto sim_t = _taskflow.emplace([&](){\n");
-  of.puts("_cudaflow.offload();\n");
-  of.puts("});\n");
-  of.puts("auto end_t = _taskflow.emplace([&](){\n");
-  of.puts("loop = 0;\n");
-  of.puts("cudaMemset(change, 1, sizeof(IData) * num_testbenches);\n");
-  of.puts("});\n\n");
-  of.puts("auto detect_t = _taskflow.emplace([&](){\n");
-  of.puts("if(++loop > 100) {\n");
-  of.puts("_change_request<<<dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0>>>(VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
-  of.puts("cudaDeviceSynchronize();\n");
-  of.puts("VL_FATAL_MT(\"add.v\", 2, \"\",\n");
-  of.puts("\"Verilated model didn't converge\"\n");
-  of.puts("\"- See https://verilator.org/warn/DIDNOTCONVERGE\");\n");
-  of.puts("}\n");
-  of.puts("return (bool)change[0];\n");
-  of.puts("});\n");
-  of.puts("start_t.precede(init_sim_t, sim_t);\n");
-  of.puts("init_sim_t.precede(init_detect_t);\n");
-  of.puts("init_detect_t.precede(end_t, init_sim_t);\n\n");
-  of.puts("sim_t.precede(detect_t);\n");
-  of.puts("detect_t.precede(end_t, sim_t);\n");
-
-  of.puts("}\n");
+    of.puts("}\n");
 }
 
 void V3EmitC::emitc() {
@@ -4572,9 +4579,9 @@ void V3EmitC::emitc() {
             fast.mainImp(nodep, false);
         }
     }
-  // RTLflow
-  emitRTLflowInt(cuda_cmem_size, cuda_smem_size, cuda_imem_size, cuda_qmem_size);
-  emitRTLflowImp();
+    // RTLflow
+    emitRTLflowInt(cuda_cmem_size, cuda_smem_size, cuda_imem_size, cuda_qmem_size);
+    emitRTLflowImp();
 }
 
 void V3EmitC::emitcTrace() {

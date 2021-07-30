@@ -63,8 +63,9 @@ public:
                                m_scopetopp, "IData");
             m_chgFuncp->putDevice();
             m_chgFuncp->cudaScope("__device__");
-            m_chgFuncp->argTypes("CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
-            //m_chgFuncp->symProlog(true);
+            m_chgFuncp->argTypes(
+                "CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
+            // m_chgFuncp->symProlog(true);
             m_chgFuncp->declPrivate(true);
             m_scopetopp->addActivep(m_chgFuncp);
 
@@ -268,7 +269,9 @@ private:
             = new AstCFunc(nodep->fileline(), "_change_request", scopep, "void");
         m_statep->m_tlChgFuncp->putDevice();
         m_statep->m_tlChgFuncp->cudaScope("__global__");
-        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar() + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, IData* change");
+        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar()
+                                         + ", CData* _csignals, SData* _ssignals, IData* "
+                                           "_isignals, QData* _qsignals, IData* change");
         m_statep->m_tlChgFuncp->symProlog(true);
         m_statep->m_tlChgFuncp->declPrivate(true);
         m_statep->m_scopetopp->addActivep(m_statep->m_tlChgFuncp);

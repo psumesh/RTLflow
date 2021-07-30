@@ -217,7 +217,8 @@ private:
                 = new AstCFunc{nodep->fileline(), "_last_assign", m_topScopep->scopep()};
             funcp->cudaScope("__global__");
             funcp->putDevice();
-            funcp->argTypes("CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
+            funcp->argTypes(
+                "CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
             funcp->dontCombine(true);
             // funcp->symProlog(true);
             funcp->entryPoint(true);
@@ -227,7 +228,9 @@ private:
         {
             AstCFunc* funcp
                 = new AstCFunc{nodep->fileline(), "_eval_initial", m_topScopep->scopep()};
-            funcp->argTypes(EmitCBaseVisitor::symClassVar() + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
+            funcp->argTypes(
+                EmitCBaseVisitor::symClassVar()
+                + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
             funcp->dontCombine(true);
             funcp->slow(true);
             funcp->symProlog(true);
@@ -256,7 +259,9 @@ private:
                 = new AstCFunc{nodep->fileline(), "_eval_settle", m_topScopep->scopep()};
             funcp->cudaScope("__global__");
             funcp->putDevice();
-            funcp->argTypes(EmitCBaseVisitor::symClassVar() + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
+            funcp->argTypes(
+                EmitCBaseVisitor::symClassVar()
+                + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
 
             funcp->dontCombine(true);
             funcp->slow(true);
@@ -345,11 +350,10 @@ private:
         m_settleFuncp->addStmtsp(stmtsp);  // add to top level function
     }
     void addToInitial(AstNode* stmtsp) {
-        if(auto* callp = VN_CAST(stmtsp, CCall)) {
-          m_initFuncp->addStmtsp(stmtsp);  // add to top level function
-        }
-        else {
-          m_initFuncp->addFinalsp(stmtsp);
+        if (auto* callp = VN_CAST(stmtsp, CCall)) {
+            m_initFuncp->addStmtsp(stmtsp);  // add to top level function
+        } else {
+            m_initFuncp->addFinalsp(stmtsp);
         }
     }
     virtual void visit(AstActive* nodep) override {

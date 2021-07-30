@@ -1754,11 +1754,13 @@ AstActive* OrderVisitor::processMoveOneLogic(const OrderLogicVertex* lvertexp,
             if (!newFuncpr && domainp != m_deleteDomainp) {
                 const string name = cfuncName(modp, domainp, scopep, nodep);
                 newFuncpr = new AstCFunc(nodep->fileline(), name, scopep);
-                if(!domainp->hasInitial()) {
-                  newFuncpr->cudaScope("__device__");
-                  newFuncpr->putDevice();
+                if (!domainp->hasInitial()) {
+                    newFuncpr->cudaScope("__device__");
+                    newFuncpr->putDevice();
                 }
-                newFuncpr->argTypes(EmitCBaseVisitor::symClassVar() + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
+                newFuncpr->argTypes(
+                    EmitCBaseVisitor::symClassVar()
+                    + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
                 newFuncpr->symProlog(true);
                 newStmtsr = 0;
                 if (domainp->hasInitial() || domainp->hasSettle()) newFuncpr->slow(true);

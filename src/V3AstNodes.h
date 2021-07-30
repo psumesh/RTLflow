@@ -1637,9 +1637,7 @@ public:
     virtual string emitC() override {
         return "%li[%ri]";
     }  // Not %k, as usually it's a small constant rhsp
-    string emitCuda() {
-        return "%li + %ri]";
-    }  // Not %k, as usually it's a small constant rhsp
+    string emitCuda() { return "%li + %ri]"; }  // Not %k, as usually it's a small constant rhsp
     virtual bool cleanOut() const override { return true; }
     virtual bool cleanLhs() const override { return true; }
     virtual bool cleanRhs() const override { return true; }

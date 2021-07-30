@@ -681,19 +681,19 @@ AstNodeDType::CTypeRecursed AstNodeDType::cTypeRecurse(bool compound) const {
         } else if (bdtypep->keyword() == AstBasicDTypeKwd::STRING) {
             info.m_type = "std::string";
         } else if (dtypep->widthMin() <= 8) {  // Handle unpacked arrays; not bdtypep->width
-            //info.m_type = "size_t";
+            // info.m_type = "size_t";
             info.m_type = "CData" + bitvec;
         } else if (dtypep->widthMin() <= 16) {
-            //info.m_type = "size_t";
+            // info.m_type = "size_t";
             info.m_type = "SData" + bitvec;
         } else if (dtypep->widthMin() <= VL_IDATASIZE) {
-            //info.m_type = "size_t";
+            // info.m_type = "size_t";
             info.m_type = "IData" + bitvec;
         } else if (dtypep->isQuad()) {
-            //info.m_type = "size_t";
+            // info.m_type = "size_t";
             info.m_type = "QData" + bitvec;
         } else if (dtypep->isWide()) {
-            //info.m_type = "size_t";
+            // info.m_type = "size_t";
             info.m_type = "RfWide<" + cvtToStr(dtypep->widthWords()) + ">" + bitvec;
         }
     } else {
