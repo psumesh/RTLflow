@@ -134,6 +134,7 @@ private:
                 AstCFunc* newfuncp = VN_CAST(nodep->user1p(), CFunc);
                 nodep->unlinkFrBack();
                 newfuncp->addInitsp(nodep);
+                nodep->local();
                 // Done
                 flags.m_done = true;
                 flags.setNodeFlags(nodep);

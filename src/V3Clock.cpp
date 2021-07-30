@@ -216,7 +216,7 @@ private:
             AstCFunc* funcp = new AstCFunc{nodep->fileline(), "_last_assign", m_topScopep->scopep()};
             funcp->cudaScope("__global__");
             funcp->putDevice();
-            funcp->argTypes("IData* _isignals, QData* _qsignals");
+            funcp->argTypes("CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
             funcp->dontCombine(true);
             //funcp->symProlog(true);
             funcp->entryPoint(true);
@@ -226,7 +226,7 @@ private:
         {
             AstCFunc* funcp
                 = new AstCFunc{nodep->fileline(), "_eval_initial", m_topScopep->scopep()};
-            funcp->argTypes(EmitCBaseVisitor::symClassVar());
+            funcp->argTypes(EmitCBaseVisitor::symClassVar() + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
             funcp->dontCombine(true);
             funcp->slow(true);
             funcp->symProlog(true);
@@ -253,7 +253,10 @@ private:
         {
             AstCFunc* funcp
                 = new AstCFunc{nodep->fileline(), "_eval_settle", m_topScopep->scopep()};
-            funcp->argTypes(EmitCBaseVisitor::symClassVar());
+            funcp->cudaScope("__global__");
+            funcp->putDevice();
+            funcp->argTypes(EmitCBaseVisitor::symClassVar() + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
+
             funcp->dontCombine(true);
             funcp->slow(true);
             funcp->isStatic(true);
@@ -341,7 +344,12 @@ private:
         m_settleFuncp->addStmtsp(stmtsp);  // add to top level function
     }
     void addToInitial(AstNode* stmtsp) {
-        m_initFuncp->addStmtsp(stmtsp);  // add to top level function
+        if(auto* callp = VN_CAST(stmtsp, CCall)) {
+          m_initFuncp->addStmtsp(stmtsp);  // add to top level function
+        }
+        else {
+          m_initFuncp->addFinalsp(stmtsp);
+        }
     }
     virtual void visit(AstActive* nodep) override {
         // Careful if adding variables here, ACTIVES can be under other ACTIVES
@@ -435,6 +443,7 @@ public:
         // Allow downstream modules to find _eval()
         // easily without iterating through the tree.
         nodep->evalp(m_evalFuncp);
+        nodep->initp(m_initFuncp);
     }
     virtual ~ClockVisitor() override = default;
 };

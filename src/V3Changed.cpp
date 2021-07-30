@@ -61,15 +61,16 @@ public:
             m_chgFuncp
                 = new AstCFunc(m_scopetopp->fileline(), "_change_request_" + cvtToStr(++m_funcNum),
                                m_scopetopp, "IData");
+            m_chgFuncp->putDevice();
             m_chgFuncp->cudaScope("__device__");
-            m_chgFuncp->argTypes("IData* _isignals, QData* _qsignals");
+            m_chgFuncp->argTypes("CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
             //m_chgFuncp->symProlog(true);
             m_chgFuncp->declPrivate(true);
             m_scopetopp->addActivep(m_chgFuncp);
 
             // Add a top call to it
             AstCCall* callp = new AstCCall(m_scopetopp->fileline(), m_chgFuncp);
-            callp->argTypes("_isignals, _qsignals");
+            callp->argTypes("_csignals, _ssignals, _isignals, _qsignals");
 
             if (!m_tlChgFuncp->stmtsp()) {
                 // m_tlChgFuncp->addStmtsp(new AstCReturn(m_scopetopp->fileline(), callp));
@@ -264,8 +265,9 @@ private:
         // Create a wrapper change detection function that calls each change detection function
         m_statep->m_tlChgFuncp
             = new AstCFunc(nodep->fileline(), "_change_request", scopep, "void");
+        m_statep->m_tlChgFuncp->putDevice();
         m_statep->m_tlChgFuncp->cudaScope("__global__");
-        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar() + ", IData* _isignals, QData* _qsignals, IData* change");
+        m_statep->m_tlChgFuncp->argTypes(EmitCBaseVisitor::symClassVar() + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, IData* change");
         m_statep->m_tlChgFuncp->symProlog(true);
         m_statep->m_tlChgFuncp->declPrivate(true);
         m_statep->m_scopetopp->addActivep(m_statep->m_tlChgFuncp);

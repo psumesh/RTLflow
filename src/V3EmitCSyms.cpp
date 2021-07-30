@@ -473,7 +473,7 @@ void EmitCSyms::emitSymHdr() {
 
     puts("\n// CREATORS\n");
     puts(symClassName() + "(VerilatedContext* contextp, " + topClassName()
-         + "* topp, const char* namep);\n");
+         + "* topp, CData* _csignals, SData* _ssignals,  IData* _isignals, QData* _qsignals, const char* namep);\n");
     puts(string("~") + symClassName() + "();\n");
 
     for (const auto& i : m_usesVfinal) {
@@ -517,7 +517,7 @@ void EmitCSyms::checkSplit(bool usesVfinal) {
 
     m_numStmts = 0;
     string filename
-        = v3Global.opt.makeDir() + "/" + symClassName() + "__" + cvtToStr(++m_funcNum) + ".cpp";
+        = v3Global.opt.makeDir() + "/" + symClassName() + "__" + cvtToStr(++m_funcNum) + ".cu";
     AstCFile* cfilep = newCFile(filename, true /*slow*/, true /*source*/);
     cfilep->support(true);
     m_usesVfinal[m_funcNum] = usesVfinal;
@@ -597,7 +597,7 @@ void EmitCSyms::emitScopeHier(bool destroy) {
 
 void EmitCSyms::emitSymImp() {
     UINFO(6, __FUNCTION__ << ": " << endl);
-    string filename = v3Global.opt.makeDir() + "/" + symClassName() + ".cpp";
+    string filename = v3Global.opt.makeDir() + "/" + symClassName() + ".cu";
     AstCFile* cfilep = newCFile(filename, true /*slow*/, true /*source*/);
     cfilep->support(true);
 
@@ -649,7 +649,7 @@ void EmitCSyms::emitSymImp() {
     emitScopeHier(true);
     puts("}\n\n");
     puts(symClassName() + "::" + symClassName() + "(VerilatedContext* contextp, " + topClassName()
-         + "* topp, const char* namep)\n");
+         + "* topp, CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, const char* namep)\n");
     puts("    // Setup locals\n");
     puts("    : VerilatedSyms{contextp}\n");
     puts("    , __Vm_namep(namep)\n");  // No leak, as gets destroyed when the top is destroyed
@@ -670,7 +670,7 @@ void EmitCSyms::emitSymImp() {
         if (modp->isTop()) {
         } else {
             puts(string("    ") + comma + " " + protect(scopep->nameDotless()));
-            puts("(Verilated::catName(topp->name(), ");
+            puts("(_csignals, _ssignals, _isignals, _qsignals, Verilated::catName(topp->name(), ");
             // The "." is added by catName
             putsQuoted(protectWordsIf(scopep->prettyName(), scopep->protect()));
             puts("))\n");
@@ -833,9 +833,22 @@ void EmitCSyms::emitSymImp() {
                     puts("))), ");
                 }
             } else {
-                puts(", &(");
-                puts(varName);
-                puts("), ");
+                puts(", ");
+                if(varp->widthMin() <= 8) {
+                  puts("_csignals");
+                } 
+                else if (varp->widthMin() <= 16) {
+                  puts("_ssignals");
+                }
+                else if(varp->isQuad()) {
+                  puts("_qsignals");
+                }
+                else {
+                  // IData
+                  puts("_isignals");
+                }
+                puts(" + " + varName);
+                puts(", ");
             }
 
             puts(varp->isParam() ? "true" : "false");
@@ -910,7 +923,7 @@ void EmitCSyms::emitDpiHdr() {
 
 void EmitCSyms::emitDpiImp() {
     UINFO(6, __FUNCTION__ << ": " << endl);
-    string filename = v3Global.opt.makeDir() + "/" + topClassName() + "__Dpi.cpp";
+    string filename = v3Global.opt.makeDir() + "/" + topClassName() + "__Dpi.cu";
     AstCFile* cfilep = newCFile(filename, false /*slow*/, true /*source*/);
     cfilep->support(true);
     V3OutCFile hf(filename);

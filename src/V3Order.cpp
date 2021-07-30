@@ -1754,16 +1754,18 @@ AstActive* OrderVisitor::processMoveOneLogic(const OrderLogicVertex* lvertexp,
             if (!newFuncpr && domainp != m_deleteDomainp) {
                 const string name = cfuncName(modp, domainp, scopep, nodep);
                 newFuncpr = new AstCFunc(nodep->fileline(), name, scopep);
-                newFuncpr->cudaScope("__device__");
-                newFuncpr->putDevice();
-                newFuncpr->argTypes(EmitCBaseVisitor::symClassVar() + ", IData* _isignals, QData* _qsignals");
+                if(!domainp->hasInitial()) {
+                  newFuncpr->cudaScope("__device__");
+                  newFuncpr->putDevice();
+                }
+                newFuncpr->argTypes(EmitCBaseVisitor::symClassVar() + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
                 newFuncpr->symProlog(true);
                 newStmtsr = 0;
                 if (domainp->hasInitial() || domainp->hasSettle()) newFuncpr->slow(true);
                 scopep->addActivep(newFuncpr);
                 // Create top call to it
                 AstCCall* const callp = new AstCCall(nodep->fileline(), newFuncpr);
-                callp->argTypes("vlSymsp, _isignals, _qsignals");
+                callp->argTypes("vlSymsp, _csignals, _ssignals, _isignals, _qsignals");
                 // Where will we be adding the call?
                 AstActive* const newActivep = new AstActive(nodep->fileline(), name, domainp);
                 newActivep->addStmtsp(callp);

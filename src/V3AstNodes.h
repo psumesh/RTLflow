@@ -1564,6 +1564,7 @@ public:
     }
     virtual string emitVerilog() override { return "%k(%l%f[%r])"; }
     virtual string emitC() override { return "%li%k[%ri]"; }
+    string emitCuda() { return "%li + %ri]"; }
     virtual bool cleanOut() const override { return true; }
     virtual bool cleanLhs() const override { return false; }
     virtual bool cleanRhs() const override { return true; }
@@ -1635,6 +1636,9 @@ public:
     virtual string emitVerilog() override { return "%k(%l%f[%r])"; }
     virtual string emitC() override {
         return "%li[%ri]";
+    }  // Not %k, as usually it's a small constant rhsp
+    string emitCuda() {
+        return "%li + %ri]";
     }  // Not %k, as usually it's a small constant rhsp
     virtual bool cleanOut() const override { return true; }
     virtual bool cleanLhs() const override { return true; }
@@ -1928,6 +1932,7 @@ private:
     VLifetime m_lifetime;  // Lifetime
     VVarAttrClocker m_attrClocker;
     MTaskIdSet m_mtaskIds;  // MTaskID's that read or write this var
+    bool m_local : 1;
     size_t m_memLoc;
 
     void init() {
@@ -1967,6 +1972,7 @@ private:
         m_overridenParam = false;
         m_trace = false;
         m_isLatched = false;
+        m_local = false;
         m_attrClocker = VVarAttrClocker::CLOCKER_UNKNOWN;
     }
 
@@ -2230,6 +2236,8 @@ public:
     string mtasksString() const;
     void setMemLoc(size_t memLoc) { m_memLoc = memLoc; }
     size_t memLoc() const { return m_memLoc; }
+    void local() { m_local = true; }
+    bool isLocal() const { return m_local; }
 };
 
 class AstDefParam final : public AstNode {
@@ -9136,6 +9144,7 @@ private:
     AstTypeTable* m_typeTablep = nullptr;  // Reference to top type table, for faster lookup
     AstPackage* m_dollarUnitPkgp = nullptr;  // $unit
     AstCFunc* m_evalp = nullptr;  // The '_eval' function
+    AstCFunc* m_initp = nullptr;  // The '_eval_initial' function
     AstExecGraph* m_execGraphp = nullptr;  // Execution MTask graph for threads>1 mode
     VTimescale m_timeunit;  // Global time unit
     VTimescale m_timeprecision;  // Global time precision
@@ -9181,6 +9190,9 @@ public:
     }
     AstCFunc* evalp() const { return m_evalp; }
     void evalp(AstCFunc* evalp) { m_evalp = evalp; }
+    AstCFunc* initp() const { return m_initp; }
+    void initp(AstCFunc* initp) { m_initp = initp; }
+
     AstExecGraph* execGraphp() const { return m_execGraphp; }
     void execGraphp(AstExecGraph* graphp) { m_execGraphp = graphp; }
     VTimescale timeunit() const { return m_timeunit; }

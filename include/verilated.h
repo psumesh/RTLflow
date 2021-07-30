@@ -99,7 +99,7 @@ using SData = vluint16_t;   ///< Data representing 'bit' of 9-16 packed bits
 using IData = vluint32_t;   ///< Data representing 'bit' of 17-32 packed bits
 using QData = vluint64_t;   ///< Data representing 'bit' of 33-64 packed bits
 using EData = vluint32_t;   ///< Data representing one element of WData array
-using WData = EData;        ///< Data representing >64 packed bits (used as pointer)
+using WData = IData;        ///< Data representing >64 packed bits (used as pointer)
 //    F     = float;        // No typedef needed; Verilator uses float
 //    D     = double;       // No typedef needed; Verilator uses double
 //    N     = std::string;  // No typedef needed; Verilator uses string
@@ -287,22 +287,22 @@ public:
 #define RF_SIG16(name, msb, lsb) size_t name  ///< Declare signal, 9-16 bits
 #define RF_SIG64(name, msb, lsb) size_t name  ///< Declare signal, 33-64 bits
 #define RF_SIG(name, msb, lsb) size_t name  ///< Declare signal, 17-32 bits
-//#define RF_SIGW(name, msb, lsb, words) size_t name[words]  ///< Declare signal, 65+ bits
+#define RF_SIGW(name, msb, lsb, words) size_t name  ///< Declare signal, 65+ bits
 #define RF_IN8(name, msb, lsb) size_t name  ///< Declare input signal, 1-8 bits
 #define RF_IN16(name, msb, lsb) size_t name  ///< Declare input signal, 9-16 bits
 #define RF_IN64(name, msb, lsb) size_t name  ///< Declare input signal, 33-64 bits
 #define RF_IN(name, msb, lsb) size_t name  ///< Declare input signal, 17-32 bits
-//#define RF_INW(name, msb, lsb), words size_t name[words]  ///< Declare input signal, 65+ bits
+#define RF_INW(name, msb, lsb, words) size_t name  ///< Declare input signal, 65+ bits
 #define RF_INOUT8(name, msb, lsb) size_t name  ///< Declare bidir signal, 1-8 bits
 #define RF_INOUT16(name, msb, lsb) size_t name  ///< Declare bidir signal, 9-16 bits
 #define RF_INOUT64(name, msb, lsb) size_t name  ///< Declare bidir signal, 33-64 bits
 #define RF_INOUT(name, msb, lsb) size_t name  ///< Declare bidir signal, 17-32 bits
-//#define RF_INOUTW(name, msb, lsb), words size_t name[words]  ///< Declare bidir signal, 65+ bits
+#define RF_INOUTW(name, msb, lsb) size_t name  ///< Declare bidir signal, 65+ bits
 #define RF_OUT8(name, msb, lsb) size_t name  ///< Declare output signal, 1-8 bits
 #define RF_OUT16(name, msb, lsb) size_t name  ///< Declare output signal, 9-16 bits
 #define RF_OUT64(name, msb, lsb) size_t name  ///< Declare output signal, 33-64bits
 #define RF_OUT(name, msb, lsb) size_t name  ///< Declare output signal, 17-32 bits
-//#define RF_OUTW(name, msb, lsb), words size_t name[words]  ///< Declare output signal, 65+ bits
+#define RF_OUTW(name, msb, lsb, words) size_t name  ///< Declare output signal, 65+ bits
 
 #define VL_CELL(instname, type)  ///< Declare a cell, ala SP_CELL
 
@@ -1127,9 +1127,12 @@ static inline IData VL_RTOI_I_D(double lhs) VL_PURE {
 
 // Sign bit extended up to MSB, doesn't include unsigned portion
 // Optimization bug in GCC 3.3 returns different bitmasks to later states for
+__host__ __device__
 static inline IData VL_EXTENDSIGN_I(int lbits, IData lhs) VL_PURE {
     return (-((lhs) & (VL_UL(1) << (lbits - 1))));
 }
+
+__host__ __device__
 static inline QData VL_EXTENDSIGN_Q(int lbits, QData lhs) VL_PURE {
     return (-((lhs) & (1ULL << (lbits - 1))));
 }
@@ -1254,6 +1257,8 @@ static inline WDataOutP VL_CLEAN_WW(int obits, int, WDataOutP owp, WDataInP lwp)
     owp[words - 1] = lwp[words - 1] & VL_MASK_E(obits);
     return owp;
 }
+
+__device__ __host__
 static inline WDataOutP VL_ZERO_W(int obits, WDataOutP owp) VL_MT_SAFE {
     int words = VL_WORDS_I(obits);
     for (int i = 0; i < words; ++i) owp[i] = 0;
@@ -1410,17 +1415,22 @@ static inline void VL_ASSIGNBIT_WO(int, int bit, WDataOutP owp, IData) VL_MT_SAF
 #define VL_EXTEND_QI(obits, lbits, lhs) (static_cast<QData>(lhs))
 #define VL_EXTEND_QQ(obits, lbits, lhs) ((lhs))
 
+__device__ __host__
 static inline WDataOutP VL_EXTEND_WI(int obits, int, WDataOutP owp, IData ld) VL_MT_SAFE {
     // Note for extracts that obits != lbits
     owp[0] = ld;
     for (int i = 1; i < VL_WORDS_I(obits); ++i) owp[i] = 0;
     return owp;
 }
+
+__device__ __host__
 static inline WDataOutP VL_EXTEND_WQ(int obits, int, WDataOutP owp, QData ld) VL_MT_SAFE {
     VL_SET_WQ(owp, ld);
     for (int i = VL_WQ_WORDS_E; i < VL_WORDS_I(obits); ++i) owp[i] = 0;
     return owp;
 }
+
+__device__ __host__
 static inline WDataOutP VL_EXTEND_WW(int obits, int lbits, WDataOutP owp,
                                      WDataInP lwp) VL_MT_SAFE {
     for (int i = 0; i < VL_WORDS_I(lbits); ++i) owp[i] = lwp[i];
@@ -1430,16 +1440,22 @@ static inline WDataOutP VL_EXTEND_WW(int obits, int lbits, WDataOutP owp,
 
 // EMIT_RULE: VL_EXTENDS:  oclean=*dirty*; obits=lbits;
 // Sign extension; output dirty
+__device__ __host__
 static inline IData VL_EXTENDS_II(int, int lbits, IData lhs) VL_PURE {
     return VL_EXTENDSIGN_I(lbits, lhs) | lhs;
 }
+
+__device__ __host__
 static inline QData VL_EXTENDS_QI(int, int lbits, QData lhs /*Q_as_need_extended*/) VL_PURE {
     return VL_EXTENDSIGN_Q(lbits, lhs) | lhs;
 }
+
+__device__ __host__
 static inline QData VL_EXTENDS_QQ(int, int lbits, QData lhs) VL_PURE {
     return VL_EXTENDSIGN_Q(lbits, lhs) | lhs;
 }
 
+__device__ __host__
 static inline WDataOutP VL_EXTENDS_WI(int obits, int lbits, WDataOutP owp, IData ld) VL_MT_SAFE {
     EData sign = VL_SIGNONES_E(lbits, static_cast<EData>(ld));
     owp[0] = ld | (sign & ~VL_MASK_E(lbits));
@@ -1835,6 +1851,7 @@ static inline void VL_NEGATE_INPLACE_W(int words, WDataOutP owp_lwp) VL_MT_SAFE 
 #define VL_MODDIV_QQQ(lbits, lhs, rhs) (((rhs) == 0) ? 0 : (lhs) % (rhs))
 #define VL_MODDIV_WWW(lbits, owp, lwp, rwp) (_vl_moddiv_w(lbits, owp, lwp, rwp, 1))
 
+__device__ __host__
 static inline WDataOutP VL_ADD_W(int words, WDataOutP owp, WDataInP lwp, WDataInP rwp) VL_MT_SAFE {
     QData carry = 0;
     for (int i = 0; i < words; ++i) {
@@ -1846,6 +1863,7 @@ static inline WDataOutP VL_ADD_W(int words, WDataOutP owp, WDataInP lwp, WDataIn
     return owp;
 }
 
+__device__ __host__
 static inline WDataOutP VL_SUB_W(int words, WDataOutP owp, WDataInP lwp, WDataInP rwp) VL_MT_SAFE {
     QData carry = 0;
     for (int i = 0; i < words; ++i) {
@@ -1859,6 +1877,7 @@ static inline WDataOutP VL_SUB_W(int words, WDataOutP owp, WDataInP lwp, WDataIn
     return owp;
 }
 
+__device__ __host__
 static inline WDataOutP VL_MUL_W(int words, WDataOutP owp, WDataInP lwp, WDataInP rwp) VL_MT_SAFE {
     for (int i = 0; i < words; ++i) owp[i] = 0;
     for (int lword = 0; lword < words; ++lword) {
@@ -1880,6 +1899,8 @@ static inline IData VL_MULS_III(int, int lbits, int, IData lhs, IData rhs) VL_PU
     vlsint32_t rhs_signed = VL_EXTENDS_II(32, lbits, rhs);
     return lhs_signed * rhs_signed;
 }
+
+__device__ __host__
 static inline QData VL_MULS_QQQ(int, int lbits, int, QData lhs, QData rhs) VL_PURE {
     vlsint64_t lhs_signed = VL_EXTENDS_QQ(64, lbits, lhs);
     vlsint64_t rhs_signed = VL_EXTENDS_QQ(64, lbits, rhs);
@@ -2149,6 +2170,7 @@ static inline void _vl_insert_WI(int, WDataOutP owp, IData ld, int hbit, int lbi
 
 // INTERNAL: Stuff large LHS bit 0++ into OUTPUT at specified offset
 // lwp may be "dirty"
+__host__ __device__
 static inline void _vl_insert_WW(int, WDataOutP owp, WDataInP lwp, int hbit, int lbit,
                                  int rbits = 0) VL_MT_SAFE {
     int hoffset = VL_BITBIT_E(hbit);
@@ -2204,6 +2226,7 @@ static inline void _vl_insert_WW(int, WDataOutP owp, WDataInP lwp, int hbit, int
     }
 }
 
+__host__ __device__
 static inline void _vl_insert_WQ(int obits, WDataOutP owp, QData ld, int hbit, int lbit,
                                  int rbits = 0) VL_MT_SAFE {
     WData lwp[VL_WQ_WORDS_E];
@@ -2472,6 +2495,7 @@ static inline void _vl_shiftl_inplace_w(int obits, WDataOutP iowp,
 // EMIT_RULE: VL_SHIFTL:  oclean=lclean; rclean==clean;
 // Important: Unlike most other funcs, the shift might well be a computed
 // expression.  Thus consider this when optimizing.  (And perhaps have 2 funcs?)
+__device__ __host__
 static inline WDataOutP VL_SHIFTL_WWI(int obits, int, int, WDataOutP owp, WDataInP lwp,
                                       IData rd) VL_MT_SAFE {
     int word_shift = VL_BITWORD_E(rd);
@@ -2487,6 +2511,8 @@ static inline WDataOutP VL_SHIFTL_WWI(int obits, int, int, WDataOutP owp, WDataI
     }
     return owp;
 }
+
+__device__ __host__
 static inline WDataOutP VL_SHIFTL_WWW(int obits, int lbits, int rbits, WDataOutP owp, WDataInP lwp,
                                       WDataInP rwp) VL_MT_SAFE {
     for (int i = 1; i < VL_WORDS_I(rbits); ++i) {
@@ -2496,12 +2522,16 @@ static inline WDataOutP VL_SHIFTL_WWW(int obits, int lbits, int rbits, WDataOutP
     }
     return VL_SHIFTL_WWI(obits, lbits, 32, owp, lwp, rwp[0]);
 }
+
+__device__ __host__
 static inline WDataOutP VL_SHIFTL_WWQ(int obits, int lbits, int rbits, WDataOutP owp, WDataInP lwp,
                                       QData rd) VL_MT_SAFE {
     WData rwp[VL_WQ_WORDS_E];
     VL_SET_WQ(rwp, rd);
     return VL_SHIFTL_WWW(obits, lbits, rbits, owp, lwp, rwp);
 }
+
+__device__ __host__
 static inline IData VL_SHIFTL_IIW(int obits, int, int rbits, IData lhs, WDataInP rwp) VL_MT_SAFE {
     for (int i = 1; i < VL_WORDS_I(rbits); ++i) {
         if (VL_UNLIKELY(rwp[i])) {  // Huge shift 1>>32 or more
@@ -2510,10 +2540,14 @@ static inline IData VL_SHIFTL_IIW(int obits, int, int rbits, IData lhs, WDataInP
     }
     return VL_CLEAN_II(obits, obits, lhs << rwp[0]);
 }
+
+__device__ __host__
 static inline IData VL_SHIFTL_IIQ(int obits, int, int, IData lhs, QData rhs) VL_MT_SAFE {
     if (VL_UNLIKELY(rhs >= VL_IDATASIZE)) return 0;
     return VL_CLEAN_II(obits, obits, lhs << rhs);
 }
+
+__device__ __host__
 static inline QData VL_SHIFTL_QQW(int obits, int, int rbits, QData lhs, WDataInP rwp) VL_MT_SAFE {
     for (int i = 1; i < VL_WORDS_I(rbits); ++i) {
         if (VL_UNLIKELY(rwp[i])) {  // Huge shift 1>>32 or more
@@ -2523,6 +2557,8 @@ static inline QData VL_SHIFTL_QQW(int obits, int, int rbits, QData lhs, WDataInP
     // Above checks rwp[1]==0 so not needed in below shift
     return VL_CLEAN_QQ(obits, obits, lhs << (static_cast<QData>(rwp[0])));
 }
+
+__device__ __host__
 static inline QData VL_SHIFTL_QQQ(int obits, int, int, QData lhs, QData rhs) VL_MT_SAFE {
     if (VL_UNLIKELY(rhs >= VL_QUADSIZE)) return 0;
     return VL_CLEAN_QQ(obits, obits, lhs << rhs);
@@ -2607,14 +2643,20 @@ static inline IData VL_SHIFTRS_III(int obits, int lbits, int, IData lhs, IData r
     IData signext = ~(VL_MASK_I(lbits) >> rhs);  // One with bits where we've shifted "past"
     return (lhs >> rhs) | (sign & VL_CLEAN_II(obits, obits, signext));
 }
+
+__device__ __host__
 static inline QData VL_SHIFTRS_QQI(int obits, int lbits, int, QData lhs, IData rhs) VL_PURE {
     QData sign = -(lhs >> (lbits - 1));
     QData signext = ~(VL_MASK_Q(lbits) >> rhs);
     return (lhs >> rhs) | (sign & VL_CLEAN_QQ(obits, obits, signext));
 }
+
+__device__ __host__
 static inline IData VL_SHIFTRS_IQI(int obits, int lbits, int rbits, QData lhs, IData rhs) VL_PURE {
     return static_cast<IData>(VL_SHIFTRS_QQI(obits, lbits, rbits, lhs, rhs));
 }
+
+__device__ __host__
 static inline WDataOutP VL_SHIFTRS_WWI(int obits, int lbits, int, WDataOutP owp, WDataInP lwp,
                                        IData rd) VL_MT_SAFE {
     int word_shift = VL_BITWORD_E(rd);

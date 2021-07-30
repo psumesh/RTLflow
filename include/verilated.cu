@@ -1724,8 +1724,8 @@ std::string VL_TOUPPER_NN(const std::string& ld) VL_MT_SAFE {
 
 std::string VL_CVT_PACK_STR_NW(int lwords, WDataInP lwp) VL_MT_SAFE {
     // See also _vl_vint_to_string
-    char destout[VL_TO_STRING_MAX_WORDS * VL_EDATASIZE + 1];
-    int obits = lwords * VL_EDATASIZE;
+    char destout[VL_TO_STRING_MAX_WORDS * VL_IDATASIZE + 1];
+    int obits = lwords * VL_IDATASIZE;
     int lsb = obits - 1;
     bool start = true;
     char* destp = destout;
