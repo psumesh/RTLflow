@@ -75,10 +75,11 @@ public:
             if (!m_tlChgFuncp->stmtsp()) {
                 // m_tlChgFuncp->addStmtsp(new AstCReturn(m_scopetopp->fileline(), callp));
                 //
-                //AstVar* changep = new AstVar(m_scopetopp->fileline(), AstVarType::BLOCKTEMP, "change", v3Global.rootp()->findBitDType());
-                //changep->funcLocal(true);
-                //m_tlChgFuncp->addInitsp(changep);
-                m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "IData __req = false;\n"));
+                // AstVar* changep = new AstVar(m_scopetopp->fileline(), AstVarType::BLOCKTEMP,
+                // "change", v3Global.rootp()->findBitDType()); changep->funcLocal(true);
+                // m_tlChgFuncp->addInitsp(changep);
+                m_tlChgFuncp->addStmtsp(
+                    new AstCStmt(m_scopetopp->fileline(), "IData __req = false;\n"));
                 m_tlChgFuncp->addStmtsp(new AstCStmt(m_scopetopp->fileline(), "__req |= "));
                 m_tlChgFuncp->addStmtsp(VN_CAST(callp, Node));
 

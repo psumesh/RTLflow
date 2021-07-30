@@ -657,14 +657,14 @@ AstNodeDType::CTypeRecursed AstNodeDType::cTypeRecurse(bool compound) const {
     } else if (const auto* adtypep = VN_CAST_CONST(dtypep, ClassRefDType)) {
         info.m_type = "VlClassRef<" + EmitCBaseVisitor::prefixNameProtect(adtypep) + ">";
     } else if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-        //if (adtypep->isCompound()) compound = true;
-        //const CTypeRecursed sub = adtypep->subDTypep()->cTypeRecurse(compound);
-        //std::string str = sub.m_type;
-        //str.pop_back();
-        //info.m_type = "RfUnpacked<" + str;
-        //info.m_type += ", " + cvtToStr(adtypep->declRange().elements());
-        //info.m_type += ", Num_Testbenches";
-        //info.m_type += ">*";
+        // if (adtypep->isCompound()) compound = true;
+        // const CTypeRecursed sub = adtypep->subDTypep()->cTypeRecurse(compound);
+        // std::string str = sub.m_type;
+        // str.pop_back();
+        // info.m_type = "RfUnpacked<" + str;
+        // info.m_type += ", " + cvtToStr(adtypep->declRange().elements());
+        // info.m_type += ", Num_Testbenches";
+        // info.m_type += ">*";
         info.m_type = "size_t";
     } else if (const AstBasicDType* bdtypep = dtypep->basicp()) {
         // We don't print msb()/lsb() as multidim packed would require recursion,

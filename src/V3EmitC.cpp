@@ -53,8 +53,8 @@ private:
     using VarVec = std::vector<const AstVar*>;
     using VarSortMap = std::map<int, VarVec>;  // Map size class to VarVec
 
-    //static size_t cuda_imem_counter;
-    //static size_t cuda_qmem_counter;
+    // static size_t cuda_imem_counter;
+    // static size_t cuda_qmem_counter;
 
     bool m_suppressSemi;
     AstVarRef* m_wideTempRefp;  // Variable that _WW macros should be setting
@@ -1414,8 +1414,8 @@ public:
     virtual ~EmitCStmts() override = default;
 };
 
-//size_t EmitCStmts::cuda_imem_counter{0};
-//size_t EmitCStmts::cuda_qmem_counter{0};
+// size_t EmitCStmts::cuda_imem_counter{0};
+// size_t EmitCStmts::cuda_qmem_counter{0};
 
 //######################################################################
 // Establish mtask variable sort order in mtasks mode
@@ -1610,8 +1610,8 @@ class EmitCImp final : public EmitCStmts {
         // For any downstream mtask that's on another thread, bump its
         // counter and maybe notify it.
         // for (V3GraphEdge* edgep = curExecMTaskp->outBeginp(); edgep; edgep = edgep->outNextp())
-        // { const ExecMTask* nextp = dynamic_cast<ExecMTask*>(edgep->top()); if (nextp->thread() !=
-        // curExecMTaskp->thread()) { puts("vlTOPp->__Vm_mt_" + cvtToStr(nextp->id())
+        // { const ExecMTask* nextp = dynamic_cast<ExecMTask*>(edgep->top()); if (nextp->thread()
+        // != curExecMTaskp->thread()) { puts("vlTOPp->__Vm_mt_" + cvtToStr(nextp->id())
         //+ ".signalUpstreamDone(even_cycle);\n");
         //}
         //}
@@ -2095,7 +2095,6 @@ public:
 
     size_t cuda_imem_size{0};
     size_t cuda_qmem_size{0};
-
 };
 
 //######################################################################
@@ -2181,18 +2180,18 @@ void EmitCStmts::emitVarDecl(const AstVar* nodep, const string& prefixIfImp) {
       //size_t mem_size{0};
       //size_t words{1};
 
-      //auto type_size = [](const AstNodeDType* dtypep){
+        // auto type_size = [](const AstNodeDType* dtypep){
         ////std::string type;
-        //size_t typesize{1};
-        //if (dtypep->isWide()) {
-          ////type = "RfWide<" + cvtToStr(dtypep->widthWords()) + ", Num_Testbenches> ";
-          //// TODO may have bugs if type is wide in RfUnpacked
-          //typesize = dtypep->widthWords();
+        // size_t typesize{1};
+        // if (dtypep->isWide()) {
+        ////type = "RfWide<" + cvtToStr(dtypep->widthWords()) + ", Num_Testbenches> ";
+        //// TODO may have bugs if type is wide in RfUnpacked
+        // typesize = dtypep->widthWords();
         //}
-        //return typesize;
-      //};
+        // return typesize;
+        //};
 
-      //if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
+        // if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
         //// RfUnpacked
         //// implementation is based on AstNodeDType::cTypeRecurse
         ////bool compound{false};
@@ -3060,12 +3059,13 @@ void EmitCImp::emitSettleLoop(const std::string& eval_call, bool initial) {
     puts("do {\n");
     puts(eval_call + "\n");
     puts("if (VL_UNLIKELY(++__VclockLoop > " + cvtToStr(v3Global.opt.convergeLimit()) + ")) {\n");
-    //puts("// About to fail, so enable debug to see what's not settling.\n");
-    //puts("// Note you must run make with OPT=-DVL_DEBUG for debug prints.\n");
-    //puts("int __Vsaved_debug = Verilated::debug();\n");
-    //puts("Verilated::debug(1);\n");
-    puts(protect("_change_request") + "<<<dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0>>>(vlSymsp, _rtlflow.change);\n");
-    //puts("Verilated::debug(__Vsaved_debug);\n");
+    // puts("// About to fail, so enable debug to see what's not settling.\n");
+    // puts("// Note you must run make with OPT=-DVL_DEBUG for debug prints.\n");
+    // puts("int __Vsaved_debug = Verilated::debug();\n");
+    // puts("Verilated::debug(1);\n");
+    puts(protect("_change_request")
+         + "<<<dim3(1, 1, 1), dim3(num_testbenches, 1, 1), 0>>>(vlSymsp, _rtlflow.change);\n");
+    // puts("Verilated::debug(__Vsaved_debug);\n");
     puts("VL_FATAL_MT(");
     putsQuoted(protect(m_modp->fileline()->filename()));
     puts(", ");
