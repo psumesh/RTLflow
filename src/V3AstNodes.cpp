@@ -790,6 +790,43 @@ AstNode* AstArraySel::baseFromp(AstNode* nodep, bool overMembers) {
     return nodep;
 }
 
+/// What is the base variable (or const) this dereferences?
+AstNode* AstWordSel::baseFromp(AstNode* nodep, bool overMembers) {
+    // Else AstArraySel etc; search for the base
+    while (nodep) {
+        if (VN_IS(nodep, WordSel)) {
+            nodep = VN_CAST(nodep, WordSel)->fromp();
+            continue;
+        }
+        else if (VN_IS(nodep, ArraySel)) {
+            nodep = VN_CAST(nodep, ArraySel)->fromp();
+            continue;
+        } else if (VN_IS(nodep, Sel)) {
+            nodep = VN_CAST(nodep, Sel)->fromp();
+            continue;
+        } else if (overMembers && VN_IS(nodep, MemberSel)) {
+            nodep = VN_CAST(nodep, MemberSel)->fromp();
+            continue;
+        }
+        // AstNodeSelPre stashes the associated variable under an ATTROF
+        // of AstAttrType::VAR_BASE/MEMBER_BASE so it isn't constified
+        else if (VN_IS(nodep, AttrOf)) {
+            nodep = VN_CAST(nodep, AttrOf)->fromp();
+            continue;
+        } else if (VN_IS(nodep, NodePreSel)) {
+            if (VN_CAST(nodep, NodePreSel)->attrp()) {
+                nodep = VN_CAST(nodep, NodePreSel)->attrp();
+            } else {
+                nodep = VN_CAST(nodep, NodePreSel)->fromp();
+            }
+            continue;
+        } else {
+            break;
+        }
+    }
+    return nodep;
+}
+
 const char* AstJumpBlock::broken() const {
     BROKEN_RTN(!labelp()->brokeExistsBelow());
     return nullptr;

@@ -100,7 +100,7 @@ public:
                     // Do nothing because VM_GLOBAL is necessary per executable. Top module will
                     // have them.
                 } else if (support == 2 && !slow) {
-                    putMakeClassEntry(of, "verilated.cpp");
+                    putMakeClassEntry(of, "rf_verilated.cpp");
                     if (v3Global.dpi()) putMakeClassEntry(of, "verilated_dpi.cpp");
                     if (v3Global.opt.vpi()) putMakeClassEntry(of, "verilated_vpi.cpp");
                     if (v3Global.opt.savable()) putMakeClassEntry(of, "verilated_save.cpp");
@@ -111,7 +111,8 @@ public:
                             putMakeClassEntry(of, v3Global.opt.traceSourceLang() + ".cpp");
                         }
                     }
-                    if (v3Global.opt.mtasks()) putMakeClassEntry(of, "verilated_threads.cpp");
+// RTLflow does not need verilated_threads
+                    //if (v3Global.opt.mtasks()) putMakeClassEntry(of, "verilated_threads.cpp");
                 } else if (support == 2 && slow) {
                 } else {
                     for (AstNodeFile* nodep = v3Global.rootp()->filesp(); nodep;

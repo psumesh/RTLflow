@@ -312,7 +312,7 @@ void V3Changed::changedAll(AstNetlist* nodep) {
         ChangedVisitor visitor(nodep, &state);
         if (state.m_tlChgFuncp->stmtsp()) {
             state.m_tlChgFuncp->addStmtsp(
-                new AstCStmt(nodep->fileline(), "change[threadIdx.x] = __req;\n"));
+                new AstCStmt(nodep->fileline(), "change[blockDim.x * blockIdx.x + threadIdx.x] = __req;\n"));
         }
     }  // Destruct before checking
     V3Global::dumpCheckGlobalTree("changed", 0, v3Global.opt.dumpTreeLevel(__FILE__) >= 3);

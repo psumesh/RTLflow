@@ -389,9 +389,9 @@ void EmitCSyms::emitSymHdr() {
     puts("\n");
     ofp()->putsIntTopInclude();
     if (v3Global.needHeavy()) {
-        puts("#include \"verilated_heavy.h\"\n");
+        puts("#include \"rf_verilated_heavy.h\"\n");
     } else {
-        puts("#include \"verilated.h\"\n");
+        puts("#include \"rf_verilated.h\"\n");
     }
 
     puts("\n// INCLUDE MODULE CLASSES\n");
@@ -400,6 +400,9 @@ void EmitCSyms::emitSymHdr() {
         if (VN_IS(nodep, Class)) continue;  // Class included earlier
         puts("#include \"" + prefixNameProtect(nodep) + ".h\"\n");
     }
+
+    puts("// begin of namespace RF =====================================\n");
+    puts("namespace RF {\n");
 
     if (v3Global.dpi()) {
         puts("\n// DPI TYPES for DPI Export callbacks (Internal use)\n");
@@ -495,6 +498,8 @@ void EmitCSyms::emitSymHdr() {
     }
     puts("\n");
     puts("} VL_ATTR_ALIGNED(VL_CACHE_LINE_BYTES);\n");
+
+    puts("} // end of namespace RF ==================================== \n");
 
     ofp()->putsEndGuard();
     VL_DO_CLEAR(delete m_ofp, m_ofp = nullptr);
@@ -610,6 +615,9 @@ void EmitCSyms::emitSymImp() {
 
     m_ofpBase = m_ofp;
     emitSymImpPreamble();
+
+    puts("// begin of namespace RF =====================================\n");
+    puts("namespace RF {\n");
 
     // puts("\n// GLOBALS\n");
 
@@ -865,6 +873,7 @@ void EmitCSyms::emitSymImp() {
     }
 
     m_ofpBase->puts("}\n");
+    puts("} // end of namespace RF ==================================== \n");
     closeSplit();
     VL_DO_CLEAR(delete m_ofp, m_ofp = nullptr);
 }

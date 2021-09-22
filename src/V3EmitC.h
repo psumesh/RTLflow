@@ -45,7 +45,7 @@ public:
                                size_t cuda_qmem_size);
     static void emitRTLflowImp();
 
-    static std::tuple<size_t, size_t, size_t, size_t> cuda_mem();
+    //static std::tuple<size_t, size_t, size_t, size_t> cuda_mem();
 };
 
 #endif  // Guard

@@ -1564,7 +1564,8 @@ public:
     }
     virtual string emitVerilog() override { return "%k(%l%f[%r])"; }
     virtual string emitC() override { return "%li%k[%ri]"; }
-    string emitCuda() { return "%li + %ri]"; }
+    string emitCuda1() { return "(%li)[%ri]"; }
+    string emitCuda2() { return "%li + %ri"; }
     virtual bool cleanOut() const override { return true; }
     virtual bool cleanLhs() const override { return false; }
     virtual bool cleanRhs() const override { return true; }
@@ -1637,13 +1638,17 @@ public:
     virtual string emitC() override {
         return "%li[%ri]";
     }  // Not %k, as usually it's a small constant rhsp
-    string emitCuda() { return "%li + %ri]"; }  // Not %k, as usually it's a small constant rhsp
+    string emitCuda1() { return "(%li)[%ri]"; }  // Not %k, as usually it's a small constant rhsp
+    string emitCuda2() { return "%li + %ri"; }  // Not %k, as usually it's a small constant rhsp
     virtual bool cleanOut() const override { return true; }
     virtual bool cleanLhs() const override { return true; }
     virtual bool cleanRhs() const override { return true; }
     virtual bool sizeMattersLhs() const override { return false; }
     virtual bool sizeMattersRhs() const override { return false; }
     virtual bool same(const AstNode* samep) const override { return true; }
+    // Special operators
+    // Return base var (or const) nodep dereferences
+    static AstNode* baseFromp(AstNode* nodep, bool overMembers);
 };
 
 class AstSelLoopVars final : public AstNode {
@@ -1931,7 +1936,7 @@ private:
     VVarAttrClocker m_attrClocker;
     MTaskIdSet m_mtaskIds;  // MTaskID's that read or write this var
     bool m_local : 1;
-    size_t m_memLoc;
+    size_t m_memLoc; // only io has memloc, for declaration
 
     void init() {
         m_ansi = false;
@@ -2232,10 +2237,20 @@ public:
     void addConsumingMTaskId(int id) { m_mtaskIds.insert(id); }
     const MTaskIdSet& mtaskIds() const { return m_mtaskIds; }
     string mtasksString() const;
-    void setMemLoc(size_t memLoc) { m_memLoc = memLoc; }
-    size_t memLoc() const { return m_memLoc; }
     void local() { m_local = true; }
     bool isLocal() const { return m_local; }
+
+    bool isCuda() const { 
+      return ((isSignal() || isClassMember() || isTemp()) && 
+        !isStatementTemp() && 
+        !isLocal());
+    }
+    void setMemLoc(size_t memLoc) { 
+      m_memLoc = memLoc; 
+    }
+    size_t memLoc() const { 
+      return m_memLoc; 
+    }
 };
 
 class AstDefParam final : public AstNode {
@@ -2376,7 +2391,12 @@ public:
 
 class AstVarRef final : public AstNodeVarRef {
     // A reference to a variable (lvalue or rvalue)
+private:
+    size_t m_memLoc;
+    AstScope* m_scopep{nullptr};
+
 public:
+
     AstVarRef(FileLine* fl, const string& name, const VAccess& access)
         : ASTGEN_SUPER_VarRef(fl, name, nullptr, access) {}
     // This form only allowed post-link because output/wire compression may
@@ -2415,9 +2435,17 @@ public:
     virtual int instrCount() const override {
         return widthInstrs() * (access().isReadOrRW() ? instrCountLd() : 1);
     }
+    //bool operator == (const AstVarRef& rhs) const {
+      //return same(&rhs);
+    //}
     virtual string emitVerilog() override { V3ERROR_NA_RETURN(""); }
     virtual string emitC() override { V3ERROR_NA_RETURN(""); }
     virtual bool cleanOut() const override { return true; }
+    void setMemLoc(size_t memLoc) { m_memLoc = memLoc; }
+    size_t memLoc() const { return m_memLoc; }
+
+    AstScope* scopep() const { return m_scopep; } // RTLflow need to know scope to allocate memory
+    void scopep(AstScope* scopep) { m_scopep = scopep; }
 };
 
 class AstVarXRef final : public AstNodeVarRef {
@@ -2531,6 +2559,11 @@ class AstModule final : public AstNodeModule {
     // A module declaration
 private:
     bool m_isProgram;  // Module represents a program
+    size_t m_cmem;
+    size_t m_smem;
+    size_t m_imem;
+    size_t m_qmem;
+    bool m_isCount{false};
 public:
     AstModule(FileLine* fl, const string& name, bool program = false)
         : ASTGEN_SUPER_Module(fl, name)
@@ -2538,6 +2571,17 @@ public:
     ASTNODE_NODE_FUNCS(Module)
     virtual string verilogKwd() const override { return m_isProgram ? "program" : "module"; }
     virtual bool timescaleMatters() const override { return true; }
+
+    void cmem(size_t cmem) { m_cmem = cmem; }
+    void smem(size_t smem) { m_smem = smem; }
+    void imem(size_t imem) { m_imem = imem; }
+    void qmem(size_t qmem) { m_qmem = qmem; }
+    void isCount(bool count) { m_isCount = count; }
+    size_t cmem() const { return m_cmem; }
+    size_t smem() const { return m_smem; }
+    size_t imem() const { return m_imem; }
+    size_t qmem() const { return m_qmem; }
+    bool isCount() const { return m_isCount; }
 };
 
 class AstNotFoundModule final : public AstNodeModule {
@@ -2783,6 +2827,10 @@ private:
     bool m_hasIfaceVar : 1;  // True if a Var has been created for this cell
     bool m_recursive : 1;  // Self-recursive module
     bool m_trace : 1;  // Trace this cell
+    size_t m_cmemLoc;
+    size_t m_smemLoc;
+    size_t m_imemLoc;
+    size_t m_qmemLoc;
 public:
     AstCell(FileLine* fl, FileLine* mfl, const string& instName, const string& modName,
             AstPin* pinsp, AstPin* paramsp, AstRange* rangep)
@@ -2832,6 +2880,16 @@ public:
     bool isTrace() const { return m_trace; }
     void recursive(bool flag) { m_recursive = flag; }
     bool recursive() const { return m_recursive; }
+
+    void cmemLoc(size_t cmem) { m_cmemLoc = cmem; }
+    void smemLoc(size_t smem) { m_smemLoc = smem; }
+    void imemLoc(size_t imem) { m_imemLoc = imem; }
+    void qmemLoc(size_t qmem) { m_qmemLoc = qmem; }
+
+    size_t cmemLoc() const { return m_cmemLoc; }
+    size_t smemLoc() const { return m_smemLoc; }
+    size_t imemLoc() const { return m_imemLoc; }
+    size_t qmemLoc() const { return m_qmemLoc; }
 };
 
 class AstCellInline final : public AstNode {

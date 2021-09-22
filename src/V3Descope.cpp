@@ -88,7 +88,7 @@ private:
         //
         // "vlTOPp" is declared "restrict" so better compilers understand
         // that it won't alias with "this".
-        bool relativeRefOk = v3Global.opt.relativeCFuncs();
+        bool relativeRefOk = false;
         //
         // Static functions can't use this
         if (!m_allowThis) relativeRefOk = false;
@@ -262,6 +262,9 @@ private:
                                            nodep->varScopep()->varp()));
         nodep->hiernameToUnprot(hierUnprot);
         nodep->hierThis(hierThis);
+        if(AstVarRef* varRefp = VN_CAST(nodep, VarRef)) {
+          varRefp->scopep(nodep->varScopep()->scopep()); // << RTLflow need to know scope
+        }
         nodep->varScopep(nullptr);
         UINFO(9, "  refout " << nodep << endl);
     }
