@@ -980,7 +980,6 @@ inline IData VL_CMP_NN(const std::string& lhs, const std::string& rhs, bool igno
 extern IData VL_ATOI_N(const std::string& str, int base) VL_PURE;
 
 extern IData VL_FGETS_NI(std::string& dest, IData fpi);
-} // end of namespace RF =========================================================================
+}  // namespace RF
 
 #endif  // Guard
-

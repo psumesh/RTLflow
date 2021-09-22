@@ -74,6 +74,6 @@ public:
     ~VerilatedHierarchyMap() = default;
 };
 
-} // end of namespace RF =========================================================================
+}  // namespace RF
 
 #endif  // Guard

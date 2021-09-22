@@ -95,6 +95,6 @@ static inline void VL_SET_SVLV_Q(int, svLogicVecVal* owp, QData ld) VL_MT_SAFE {
 
 //======================================================================
 
-} // end of namespace RF =========================================================================
+}  // namespace RF
 
 #endif  // Guard

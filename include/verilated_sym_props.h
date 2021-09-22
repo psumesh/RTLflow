@@ -252,6 +252,6 @@ public:
     bool isParam() const { return m_isParam; }
 };
 
-} // end of namespace RF =========================================================================
+}  // namespace RF
 
 #endif  // Guard

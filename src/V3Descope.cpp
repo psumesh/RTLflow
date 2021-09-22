@@ -262,8 +262,8 @@ private:
                                            nodep->varScopep()->varp()));
         nodep->hiernameToUnprot(hierUnprot);
         nodep->hierThis(hierThis);
-        if(AstVarRef* varRefp = VN_CAST(nodep, VarRef)) {
-          varRefp->scopep(nodep->varScopep()->scopep()); // << RTLflow need to know scope
+        if (AstVarRef* varRefp = VN_CAST(nodep, VarRef)) {
+            varRefp->scopep(nodep->varScopep()->scopep());  // << RTLflow need to know scope
         }
         nodep->varScopep(nullptr);
         UINFO(9, "  refout " << nodep << endl);

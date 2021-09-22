@@ -1936,7 +1936,7 @@ private:
     VVarAttrClocker m_attrClocker;
     MTaskIdSet m_mtaskIds;  // MTaskID's that read or write this var
     bool m_local : 1;
-    size_t m_memLoc; // only io has memloc, for declaration
+    size_t m_memLoc;  // only io has memloc, for declaration
 
     void init() {
         m_ansi = false;
@@ -2240,17 +2240,11 @@ public:
     void local() { m_local = true; }
     bool isLocal() const { return m_local; }
 
-    bool isCuda() const { 
-      return ((isSignal() || isClassMember() || isTemp()) && 
-        !isStatementTemp() && 
-        !isLocal());
+    bool isCuda() const {
+        return ((isSignal() || isClassMember() || isTemp()) && !isStatementTemp() && !isLocal());
     }
-    void setMemLoc(size_t memLoc) { 
-      m_memLoc = memLoc; 
-    }
-    size_t memLoc() const { 
-      return m_memLoc; 
-    }
+    void setMemLoc(size_t memLoc) { m_memLoc = memLoc; }
+    size_t memLoc() const { return m_memLoc; }
 };
 
 class AstDefParam final : public AstNode {
@@ -2396,7 +2390,6 @@ private:
     AstScope* m_scopep{nullptr};
 
 public:
-
     AstVarRef(FileLine* fl, const string& name, const VAccess& access)
         : ASTGEN_SUPER_VarRef(fl, name, nullptr, access) {}
     // This form only allowed post-link because output/wire compression may
@@ -2435,8 +2428,8 @@ public:
     virtual int instrCount() const override {
         return widthInstrs() * (access().isReadOrRW() ? instrCountLd() : 1);
     }
-    //bool operator == (const AstVarRef& rhs) const {
-      //return same(&rhs);
+    // bool operator == (const AstVarRef& rhs) const {
+    // return same(&rhs);
     //}
     virtual string emitVerilog() override { V3ERROR_NA_RETURN(""); }
     virtual string emitC() override { V3ERROR_NA_RETURN(""); }
@@ -2444,7 +2437,7 @@ public:
     void setMemLoc(size_t memLoc) { m_memLoc = memLoc; }
     size_t memLoc() const { return m_memLoc; }
 
-    AstScope* scopep() const { return m_scopep; } // RTLflow need to know scope to allocate memory
+    AstScope* scopep() const { return m_scopep; }  // RTLflow need to know scope to allocate memory
     void scopep(AstScope* scopep) { m_scopep = scopep; }
 };
 
@@ -2564,6 +2557,7 @@ private:
     size_t m_imem;
     size_t m_qmem;
     bool m_isCount{false};
+
 public:
     AstModule(FileLine* fl, const string& name, bool program = false)
         : ASTGEN_SUPER_Module(fl, name)
@@ -2831,6 +2825,7 @@ private:
     size_t m_smemLoc;
     size_t m_imemLoc;
     size_t m_qmemLoc;
+
 public:
     AstCell(FileLine* fl, FileLine* mfl, const string& instName, const string& modName,
             AstPin* pinsp, AstPin* paramsp, AstRange* rangep)

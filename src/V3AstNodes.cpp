@@ -797,8 +797,7 @@ AstNode* AstWordSel::baseFromp(AstNode* nodep, bool overMembers) {
         if (VN_IS(nodep, WordSel)) {
             nodep = VN_CAST(nodep, WordSel)->fromp();
             continue;
-        }
-        else if (VN_IS(nodep, ArraySel)) {
+        } else if (VN_IS(nodep, ArraySel)) {
             nodep = VN_CAST(nodep, ArraySel)->fromp();
             continue;
         } else if (VN_IS(nodep, Sel)) {

@@ -1067,37 +1067,39 @@ public:
         emitOpName(nodep, nodep->emitC(), nodep->fromp(), nodep->lsbp(), nodep->thsp());
     }
     virtual void visit(AstArraySel* nodep) override {
-      if(auto* varRefp = VN_CAST(AstArraySel::baseFromp(nodep, true), VarRef)) {
-        auto* varp = varRefp->varp();
-        if(varp->isCuda()) {
-          if(auto* backp = VN_CAST(nodep->backp(), NodeSel)) {
-            if(nodep == VN_CAST(backp->fromp(), ArraySel)) {
-              emitOpName(nodep, nodep->emitCuda2(), nodep->fromp(), nodep->bitp(), nullptr);
-              return;
+        if (auto* varRefp = VN_CAST(AstArraySel::baseFromp(nodep, true), VarRef)) {
+            auto* varp = varRefp->varp();
+            if (varp->isCuda()) {
+                if (auto* backp = VN_CAST(nodep->backp(), NodeSel)) {
+                    if (nodep == VN_CAST(backp->fromp(), ArraySel)) {
+                        emitOpName(nodep, nodep->emitCuda2(), nodep->fromp(), nodep->bitp(),
+                                   nullptr);
+                        return;
+                    }
+                }
+                emitOpName(nodep, nodep->emitCuda1(), nodep->fromp(), nodep->bitp(), nullptr);
+                return;
             }
-          }
-          emitOpName(nodep, nodep->emitCuda1(), nodep->fromp(), nodep->bitp(), nullptr);
-          return;
         }
-      }
-      emitOpName(nodep, nodep->emitC(), nodep->fromp(), nodep->bitp(), nullptr);
+        emitOpName(nodep, nodep->emitC(), nodep->fromp(), nodep->bitp(), nullptr);
     }
     virtual void visit(AstWordSel* nodep) override {
-      // we need to know the whether base fromp is allocated in global memory
-      if(auto* varRefp = VN_CAST(AstWordSel::baseFromp(nodep, true), VarRef)) {
-        auto* varp = varRefp->varp();
-        if(varp->isCuda()) {
-          if(auto* backp = VN_CAST(nodep->backp(), NodeSel)) {
-            if(nodep == VN_CAST(backp->fromp(), WordSel)) {
-              emitOpName(nodep, nodep->emitCuda2(), nodep->fromp(), nodep->bitp(), nullptr);
-              return;
+        // we need to know the whether base fromp is allocated in global memory
+        if (auto* varRefp = VN_CAST(AstWordSel::baseFromp(nodep, true), VarRef)) {
+            auto* varp = varRefp->varp();
+            if (varp->isCuda()) {
+                if (auto* backp = VN_CAST(nodep->backp(), NodeSel)) {
+                    if (nodep == VN_CAST(backp->fromp(), WordSel)) {
+                        emitOpName(nodep, nodep->emitCuda2(), nodep->fromp(), nodep->bitp(),
+                                   nullptr);
+                        return;
+                    }
+                }
+                emitOpName(nodep, nodep->emitCuda1(), nodep->fromp(), nodep->bitp(), nullptr);
+                return;
             }
-          }
-          emitOpName(nodep, nodep->emitCuda1(), nodep->fromp(), nodep->bitp(), nullptr);
-          return;
         }
-      }
-      emitOpName(nodep, nodep->emitC(), nodep->fromp(), nodep->bitp(), nullptr);
+        emitOpName(nodep, nodep->emitC(), nodep->fromp(), nodep->bitp(), nullptr);
     }
     virtual void visit(AstReplicate* nodep) override {
         if (nodep->lhsp()->widthMin() == 1 && !nodep->isWide()) {
@@ -1176,15 +1178,14 @@ public:
     virtual void visit(AstVarRef* nodep) override {
         auto* varp = nodep->varp();
         AstNodeDType* dtypep{nullptr};
-          if (varp->isCuda()) {
-            //TODO I don't consider the case array of array
-            //only consider UnpackedArray
+        if (varp->isCuda()) {
+            // TODO I don't consider the case array of array
+            // only consider UnpackedArray
             AstUnpackArrayDType* adtypep = VN_CAST(varp->dtypeSkipRefp(), UnpackArrayDType);
-            if(adtypep != nullptr) {
-              dtypep = adtypep->subDTypep();
-            }
-            else {
-              dtypep = varp->dtypeSkipRefp();
+            if (adtypep != nullptr) {
+                dtypep = adtypep->subDTypep();
+            } else {
+                dtypep = varp->dtypeSkipRefp();
             }
 
             if (dtypep->widthMin() <= 8) {
@@ -1222,9 +1223,7 @@ public:
 
             puts("NUM_TESTBENCHES * " + cvtToStr(nodep->memLoc()));
 
-            if (!m_isPointer && !dtypep->isWide() && adtypep == nullptr) {
-                puts("]");
-            }
+            if (!m_isPointer && !dtypep->isWide() && adtypep == nullptr) { puts("]"); }
         } else {
             puts(nodep->hiernameProtect());
             puts(varp->nameProtect());
@@ -1834,11 +1833,11 @@ class EmitCImp final : public EmitCStmts {
     }
 
     virtual void visit(AstCReset* nodep) override {
-        //AstVar* varp = nodep->varrefp()->varp();
-        //if(nodep->varrefp()->scopep() == nullptr) {
-          //if(!(varp->isPrimaryIO() || varp->isStatic())) {
-            //return;
-          //}
+        // AstVar* varp = nodep->varrefp()->varp();
+        // if(nodep->varrefp()->scopep() == nullptr) {
+        // if(!(varp->isPrimaryIO() || varp->isStatic())) {
+        // return;
+        //}
         //}
         emitVarReset(nodep->varrefp());
     }
@@ -1933,14 +1932,15 @@ class EmitCImp final : public EmitCStmts {
             signals = "_isignals";
             cell_counter = "reset_cell_counter * " + cvtToStr(modp->imem());
         }
-      //printf("%s\n", cell_counter.c_str());
+        // printf("%s\n", cell_counter.c_str());
 
         // TODO: change name
-        //const string varNameProtected
-            //= VN_IS(m_modp, Class) ? varp->nameProtect() : "self->" + varp->nameProtect();
-            //
-        //std::cerr << varRefp->hiernameProtect() << "   " << varRefp->nameProtect() << "\n";
-        const string varNameProtected = cell_counter + " + " + cvtToStr(varRefp->memLoc()) + " * NUM_TESTBENCHES";
+        // const string varNameProtected
+        //= VN_IS(m_modp, Class) ? varp->nameProtect() : "self->" + varp->nameProtect();
+        //
+        // std::cerr << varRefp->hiernameProtect() << "   " << varRefp->nameProtect() << "\n";
+        const string varNameProtected
+            = cell_counter + " + " + cvtToStr(varRefp->memLoc()) + " * NUM_TESTBENCHES";
 
         if (varp->isIO() && m_modp->isTop() && optSystemC()) {
             // System C top I/O doesn't need loading, as the lower level subinst code does it.}
@@ -2016,7 +2016,7 @@ class EmitCImp final : public EmitCStmts {
             string pre = ("for (int " + ivar + "=" + cvtToStr(0) + "; " + ivar + "<"
                           + cvtToStr(adtypep->elementsConst()) + "; ++" + ivar + ") {\n");
             if (dtypep->isWide() && (varp->valuep() == nullptr)) {
-              ivar += " * " + cvtToStr(varp->widthWords());
+                ivar += " * " + cvtToStr(varp->widthWords());
             }
             string below = emitVarResetRecurse(varp, varNameProtected, adtypep->subDTypep(),
                                                depth + 1, suffix + ivar);
@@ -2052,10 +2052,9 @@ class EmitCImp final : public EmitCStmts {
                 } else {
                     out += zeroit ? "VL_ZERO_RESET_W(" : "VL_RAND_RESET_W(";
                     out += cvtToStr(dtypep->widthMin());
-                    out += ", " + signals + " + i * " + cvtToStr(dtypep->widthWords()) + " + " + varNameProtected;
-                    if(!suffix.empty()) {
-                      out += " + " + suffix;
-                    }
+                    out += ", " + signals + " + i * " + cvtToStr(dtypep->widthWords()) + " + "
+                           + varNameProtected;
+                    if (!suffix.empty()) { out += " + " + suffix; }
                     out += ");\n";
                 }
                 return out;
@@ -2194,11 +2193,10 @@ void EmitCStmts::emitVarDecl(const AstVar* nodep, const string& prefixIfImp) {
 
         if (nodep->isCuda()) {
             // if(nodep->isStatic()) puts("static ");
-            //puts("constexpr size_t ");
+            // puts("constexpr size_t ");
             // if(!prefixIfImp.empty()) puts(prefixIfImp + "::");
-            //puts(nodep->nameProtect());
-        } 
-        else {
+            // puts(nodep->nameProtect());
+        } else {
             puts(nodep->vlArgType(true, false, false, prefixIfImp));
             puts(";\n");
         }
@@ -2273,11 +2271,10 @@ void EmitCStmts::emitVarDecl(const AstVar* nodep, const string& prefixIfImp) {
             puts(", " + cvtToStr(dtypep->widthWords()));
             puts("/*IData, wide*/");
         } else if (const AstUnpackArrayDType* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-            if(adtypep->subDTypep()->isWide()) {
-              puts(", " + cvtToStr(adtypep->declRange().elements() * dtypep->widthWords()));
-            }
-            else {
-              puts(", " + cvtToStr(adtypep->declRange().elements()));
+            if (adtypep->subDTypep()->isWide()) {
+                puts(", " + cvtToStr(adtypep->declRange().elements() * dtypep->widthWords()));
+            } else {
+                puts(", " + cvtToStr(adtypep->declRange().elements()));
             }
             puts("/*Array*/");
         }
@@ -3102,8 +3099,9 @@ void EmitCImp::emitSettleLoop(const std::string& eval_call, bool initial) {
     // puts("// Note you must run make with OPT=-DVL_DEBUG for debug prints.\n");
     // puts("int __Vsaved_debug = Verilated::debug();\n");
     // puts("Verilated::debug(1);\n");
-    puts(protect("_change_request")
-         + "<<<dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0>>>(vlSymsp, _rtlflow.change);\n");
+    puts(
+        protect("_change_request")
+        + "<<<dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0>>>(vlSymsp, _rtlflow.change);\n");
     // puts("Verilated::debug(__Vsaved_debug);\n");
     puts("VL_FATAL_MT(");
     putsQuoted(protect(m_modp->fileline()->filename()));
@@ -3266,9 +3264,7 @@ void EmitCStmts::emitVarList(AstNode* firstp, EisWhich which, const string& pref
                     doit = (varp->isParam() && !VN_IS(varp->valuep(), Const));
                     break;
                 case EVL_CLASS_ALL: doit = true; break;
-                case EVL_NOT_CUDA:
-                    doit = varp->isCuda();
-                    break;
+                case EVL_NOT_CUDA: doit = varp->isCuda(); break;
                 case EVL_FUNC_ALL: doit = true; break;
                 default: v3fatalSrc("Bad Case");
                 }
@@ -3480,10 +3476,10 @@ void EmitCImp::emitIntTop(AstNodeModule* modp) {
     // if (v3Global.opt.mtasks()) puts("#include \"verilated_threads.h\"\n");
     if (v3Global.opt.savable()) puts("#include \"verilated_save.h\"\n");
     if (v3Global.opt.coverage()) puts("#include \"verilated_cov.h\"\n");
-    //if (v3Global.dpi()) {
-        //// do this before including our main .h file so that any references to
-        //// types defined in svdpi.h are available
-        //puts("#include \"" + topClassName() + "__Dpi.h\"\n");
+    // if (v3Global.dpi()) {
+    //// do this before including our main .h file so that any references to
+    //// types defined in svdpi.h are available
+    // puts("#include \"" + topClassName() + "__Dpi.h\"\n");
     //}
     if (modp->isTop()) { puts("#define NUM_TESTBENCHES 1ULL"); }
 }
@@ -3767,7 +3763,7 @@ void EmitCImp::emitImp(AstNodeModule* modp) {
 
     puts("\n//==========\n");
     if (m_slow) {
-      puts("size_t " + prefixNameProtect(modp) + "::reset_cell_counter = 0;");
+        puts("size_t " + prefixNameProtect(modp) + "::reset_cell_counter = 0;");
         string section;
         emitVarList(modp->stmtsp(), EVL_NOT_CUDA, prefixNameProtect(modp), section /*ref*/);
         if (!VN_IS(modp, Class)) emitCtorImp(modp);
@@ -4328,372 +4324,336 @@ public:
 //######################################################################
 class cudaCheck final : AstNVisitor {
 
-  V3OutCFile m_of;
-  bool m_isPointer;
-  bool m_isGpu;
+    V3OutCFile m_of;
+    bool m_isPointer;
+    bool m_isGpu;
 
+    // VISITORS
+    virtual void visit(AstNetlist* nodep) override { iterateChildren(nodep); }
 
-  // VISITORS
-  virtual void visit(AstNetlist* nodep) override {
-    iterateChildren(nodep);
-  }
+    virtual void visit(AstModule* nodep) override {
+        // m_modp = nodep;
+        iterateChildren(nodep);
+        // m_modp = nullptr;
+    }
 
-  virtual void visit(AstModule* nodep) override {
-    //m_modp = nodep;
-    iterateChildren(nodep);
-    //m_modp = nullptr;
-  }
+    virtual void visit(AstNode* nodep) override { iterateChildren(nodep); }
 
-  virtual void visit(AstNode* nodep) override {
-    iterateChildren(nodep);
-  }
+    virtual void visit(AstVarRef* nodep) override {
+        string signals;
+        auto* varp = nodep->varp();
+        AstNodeDType* dtypep{nullptr};
+        if (varp->isCuda()) {
+            if (nodep->scopep() == nullptr) {
+                // TODO: not sure
+                // base
+                // nodep->setMemLoc(varp->memLoc());
+                return;
+            }
+            // else if(nodep->scopep()->modp()->isTop()) {
+            //// we only have one top module
+            //// memory location is already set in AstVar
+            // nodep->setMemLoc(varp->memLoc());
+            // return;
+            //}
+            // TODO I don't consider the case array of array
+            // only consider UnpackedArray
+            AstUnpackArrayDType* adtypep = VN_CAST(varp->dtypeSkipRefp(), UnpackArrayDType);
+            if (adtypep != nullptr || varp->isWide()) {
+                // dtypep = adtypep->subDTypep();
+                return;
+            } else {
+                dtypep = varp->dtypeSkipRefp();
+            }
 
-  virtual void visit(AstVarRef* nodep) override {
-    string signals;
-    auto* varp = nodep->varp();
-    AstNodeDType* dtypep{nullptr};
-    if (varp->isCuda()) {
-      if(nodep->scopep() == nullptr) {
-        // TODO: not sure
-        // base
-        //nodep->setMemLoc(varp->memLoc());
-        return;
-      }
-      //else if(nodep->scopep()->modp()->isTop()) {
-        //// we only have one top module
-        //// memory location is already set in AstVar
-        //nodep->setMemLoc(varp->memLoc());
-        //return;
-      //}
-      //TODO I don't consider the case array of array
-      //only consider UnpackedArray
-      AstUnpackArrayDType* adtypep = VN_CAST(varp->dtypeSkipRefp(), UnpackArrayDType);
-      if(adtypep != nullptr || varp->isWide()) {
-        //dtypep = adtypep->subDTypep();
-        return;
-      }
-      else {
-        dtypep = varp->dtypeSkipRefp();
-      }
+            m_of.puts("RF_ASSERT(");
 
-      m_of.puts("RF_ASSERT("); 
+            if (dtypep->widthMin() <= 8) {
+                m_of.puts("_csignals");
+            } else if (dtypep->widthMin() <= 16) {
+                m_of.puts("_ssignals");
+            } else if (dtypep->isQuad()) {
+                m_of.puts("_qsignals");
+            } else {
+                // IData, WData
+                m_of.puts("_isignals");
+            }
 
-      if (dtypep->widthMin() <= 8) {
-          m_of.puts("_csignals");
-      } else if (dtypep->widthMin() <= 16) {
-          m_of.puts("_ssignals");
-      } else if (dtypep->isQuad()) {
-          m_of.puts("_qsignals");
-      } else {
-          // IData, WData
-          m_of.puts("_isignals");
-      }
+            m_of.puts("[");
 
-      m_of.puts("[");
+            // m_of.puts("(blockDim.x * blockIdx.x + threadIdx.x)");
+            // m_of.puts("(0)");
 
-      //m_of.puts("(blockDim.x * blockIdx.x + threadIdx.x)");
-      //m_of.puts("(0)");
+            // if (adtypep != nullptr) {
+            // m_of.puts(" * " + cvtToStr(adtypep->arrayUnpackedElements()));
+            // if (adtypep->subDTypep()->isWide()) {
+            // m_of.puts(" * " + cvtToStr(adtypep->subDTypep()->widthWords()));
+            //}
+            //} else if (varp->isWide()) {
+            // m_of.puts(" * " + cvtToStr(varp->widthWords()));
+            //}
+            // m_of.puts(" + ");
 
-      //if (adtypep != nullptr) {
-          //m_of.puts(" * " + cvtToStr(adtypep->arrayUnpackedElements()));
-          //if (adtypep->subDTypep()->isWide()) {
-              //m_of.puts(" * " + cvtToStr(adtypep->subDTypep()->widthWords()));
-          //}
-      //} else if (varp->isWide()) {
-          //m_of.puts(" * " + cvtToStr(varp->widthWords()));
-      //}
-      //m_of.puts(" + ");
+            m_of.puts("NUM_TESTBENCHES * " + cvtToStr(nodep->memLoc()));
 
-      m_of.puts("NUM_TESTBENCHES * " + cvtToStr(nodep->memLoc()));
+            m_of.puts("]");
 
-      m_of.puts("]");
+            m_of.puts(" == " + nodep->hiernameProtect() + varp->nameProtect() + ", \"\");\n");
+        }
+    }
 
-      m_of.puts(" == " + nodep->hiernameProtect() + varp->nameProtect() + ", \"\");\n");
-    } 
-  }
-  
-  public: 
+public:
+    explicit cudaCheck()
+        : m_of{v3Global.opt.makeDir() + "/check.cu"} {}
 
-  explicit cudaCheck(): m_of{v3Global.opt.makeDir() + "/check.cu"} {
-  }
+    virtual ~cudaCheck() override = default;
 
-  virtual ~cudaCheck() override = default;
+    // check function
+    void check() {
 
-  // check function
-  void check() {
+        //// newCFile(fileDir + "taskgraph.h", false , false);
+        // AstCFile* cfilep = new AstCFile(v3Global.rootp()->fileline(), filename);
+        // cfilep->slow(false);
+        // cfilep->source(false);
+        // v3Global.rootp()->addFilesp(cfilep);
+        string topClassName = v3Global.opt.prefix();
+        m_of.puts("#include <iostream>\n");
+        m_of.puts("#include \"rtlflow.h\"\n");
+        m_of.puts("#include \"" + topClassName + ".h\"\n");
+        m_of.puts("#include \"../verilator/" + topClassName + ".h\"\n");
+        m_of.puts("#include \"../verilator/" + topClassName + "__Syms.h\"\n");
 
-    //// newCFile(fileDir + "taskgraph.h", false , false);
-    //AstCFile* cfilep = new AstCFile(v3Global.rootp()->fileline(), filename);
-    //cfilep->slow(false);
-    //cfilep->source(false);
-    //v3Global.rootp()->addFilesp(cfilep);
-    string topClassName = v3Global.opt.prefix();
-    m_of.puts("#include <iostream>\n");
-    m_of.puts("#include \"rtlflow.h\"\n");
-    m_of.puts("#include \"" + topClassName + ".h\"\n");
-    m_of.puts("#include \"../verilator/" + topClassName + ".h\"\n");
-    m_of.puts("#include \"../verilator/" + topClassName+ "__Syms.h\"\n");
+        // micros
+        m_of.puts("#ifdef NDEBUG\n");
+        m_of.puts("#define RF_ASSERT(condition, message) 0\n");
+        m_of.puts("#else\n");
+        m_of.puts("#define RF_ASSERT(condition, message)\\\n");
+        m_of.puts("  (!(condition)) ?\\\n");
+        m_of.puts("    (std::cerr << \"Assertion failed: (\" << #condition << \"), \"\\\n");
+        m_of.puts("    << \"function \" << __FUNCTION__\\\n");
+        m_of.puts("    << \", file \"   << __FILE__\\\n");
+        m_of.puts("    << \", line \"   << __LINE__ << \".\"\\\n");
+        m_of.puts("    << \"\\n\"       << message  << \"\\n\", 0) : 1\n");
+        m_of.puts("#endif\n");
 
-    // micros
-    m_of.puts("#ifdef NDEBUG\n");
-    m_of.puts("#define RF_ASSERT(condition, message) 0\n");
-    m_of.puts("#else\n");
-    m_of.puts("#define RF_ASSERT(condition, message)\\\n");
-    m_of.puts("  (!(condition)) ?\\\n");
-    m_of.puts("    (std::cerr << \"Assertion failed: (\" << #condition << \"), \"\\\n");
-    m_of.puts("    << \"function \" << __FUNCTION__\\\n");
-    m_of.puts("    << \", file \"   << __FILE__\\\n");
-    m_of.puts("    << \", line \"   << __LINE__ << \".\"\\\n");
-    m_of.puts("    << \"\\n\"       << message  << \"\\n\", 0) : 1\n");
-    m_of.puts("#endif\n");
-
-    m_of.puts("void check(RF::" + topClassName + "* rfl, " + 
-              topClassName + "* vtr) {\n");
-    m_of.puts(topClassName + "__Syms* vlSymsp = vtr->__VlSymsp;\n");
-    m_of.puts("CData* _csignals = rfl._rtlflow._csignals;\n");
-    m_of.puts("SData* _ssignals = rfl._rtlflow._ssignals;\n");
-    m_of.puts("QData* _qsignals = rfl._rtlflow._qsignals;\n");
-    m_of.puts("IData* _isignals = rfl._rtlflow._isignals;\n");
-    iterate(v3Global.rootp()); 
-    m_of.puts("\n}");
-
-  }
+        m_of.puts("void check(RF::" + topClassName + "* rfl, " + topClassName + "* vtr) {\n");
+        m_of.puts(topClassName + "__Syms* vlSymsp = vtr->__VlSymsp;\n");
+        m_of.puts("CData* _csignals = rfl._rtlflow._csignals;\n");
+        m_of.puts("SData* _ssignals = rfl._rtlflow._ssignals;\n");
+        m_of.puts("QData* _qsignals = rfl._rtlflow._qsignals;\n");
+        m_of.puts("IData* _isignals = rfl._rtlflow._isignals;\n");
+        iterate(v3Global.rootp());
+        m_of.puts("\n}");
+    }
 };
 
 class cudaMemAssign final : public AstNVisitor {
 
-  AstModule* m_modp;
-  size_t m_cmem = 0;
-  size_t m_smem = 0;
-  size_t m_imem = 0;
-  size_t m_qmem = 0;
+    AstModule* m_modp;
+    size_t m_cmem = 0;
+    size_t m_smem = 0;
+    size_t m_imem = 0;
+    size_t m_qmem = 0;
 
-  using Key = std::pair<AstCell*, AstVar*>;
+    using Key = std::pair<AstCell*, AstVar*>;
 
-  struct equal {
-    bool operator()(const Key& lhs, const Key& rhs) const {
-      return (lhs.first == rhs.first) && (lhs.second == rhs.second);
+    struct equal {
+        bool operator()(const Key& lhs, const Key& rhs) const {
+            return (lhs.first == rhs.first) && (lhs.second == rhs.second);
+        }
+    };
+
+    struct hash {
+        size_t operator()(const Key& key) const {
+            return std::hash<size_t>()((size_t)key.first ^ (size_t)key.second);
+        }
+    };
+
+    std::unordered_map<Key, size_t, hash, equal> m_memLocMap;
+
+    struct equalM {
+        bool operator()(const AstModule* lhs, const AstModule* rhs) const { return (lhs == rhs); }
+    };
+
+    struct hashM {
+        size_t operator()(const AstModule* mod) const { return ((size_t)mod) >> 3; }
+    };
+    std::unordered_map<AstModule*, std::vector<AstVar*>, hashM, equalM> m_modMap;
+    std::vector<AstCell*> m_cellps;
+
+    // VISITORS
+    virtual void visit(AstNetlist* nodep) override { iterateChildren(nodep); }
+
+    virtual void visit(AstModule* nodep) override {
+        m_modp = nodep;
+        m_modMap.insert({m_modp, std::vector<AstVar*>()});
+        iterateChildren(nodep);
     }
-  };
 
+    // virtual void visit(AstScope* nodep) override {
+    //}
 
-  struct hash {
-    size_t operator() (const Key& key) const {
-      return std::hash<size_t>()((size_t)key.first ^ (size_t)key.second);
+    virtual void visit(AstCell* nodep) override {
+        m_cellps.push_back(nodep);
+        iterateChildren(nodep);
     }
-  };
 
-  std::unordered_map<Key, size_t, hash, equal>  m_memLocMap;
+    virtual void visit(AstNode* nodep) override { iterateChildren(nodep); }
 
-  struct equalM {
-    bool operator()(const AstModule* lhs, const AstModule* rhs) const {
-      return (lhs == rhs);
+    virtual void visit(AstVar* nodep) override {
+        if (nodep->isCuda()) { m_modMap[m_modp].push_back(nodep); }
+        iterateChildren(nodep);
     }
-  };
 
-  struct hashM {
-    size_t operator() (const AstModule* mod) const {
-      return ((size_t)mod) >> 3;
+    size_t countMem(const AstNodeDType* dtypep, AstVar* varp, size_t words) {
+        size_t count{0};
+        if (dtypep->widthMin() <= 8) {
+            count = m_cmem;
+            m_cmem += words;
+        } else if (dtypep->widthMin() <= 16) {
+            count = m_smem;
+            m_smem += words;
+        } else if (dtypep->isQuad()) {
+            count = m_qmem;
+            m_qmem += words;
+        } else if (dtypep->isWide()) {
+            count = m_imem;
+            m_imem += varp->widthWords() * words;
+        } else {  // IData
+            count = m_imem;
+            m_imem += words;
+        }
+        return count;
     }
-  };
-  std::unordered_map<AstModule*, std::vector<AstVar*>, hashM, equalM>  m_modMap;
-  std::vector<AstCell*> m_cellps;
 
-  // VISITORS
-  virtual void visit(AstNetlist* nodep) override {
-    iterateChildren(nodep);
-  }
-
-  virtual void visit(AstModule* nodep) override {
-    m_modp = nodep;
-    m_modMap.insert({m_modp, std::vector<AstVar*>()});
-    iterateChildren(nodep);
-  }
-
-  //virtual void visit(AstScope* nodep) override {
-  //}
-
-  virtual void visit(AstCell* nodep) override {
-    m_cellps.push_back(nodep);
-    iterateChildren(nodep);
-  }
-
-  virtual void visit(AstNode* nodep) override {
-    iterateChildren(nodep);
-  }
-
-  virtual void visit(AstVar* nodep) override {
-    if(nodep->isCuda()) {
-      m_modMap[m_modp].push_back(nodep);
+    void sortCells() {
+        std::sort(m_cellps.begin(), m_cellps.end(), [](AstCell* lhs, AstCell* rhs) {
+            return (lhs->modp()->level() > rhs->modp()->level());
+        });
     }
-    iterateChildren(nodep);
-  }
 
-  size_t countMem(const AstNodeDType* dtypep, AstVar* varp, size_t words) {
-    size_t count{0};
-    if (dtypep->widthMin() <= 8) {
-      count = m_cmem;
-      m_cmem += words;
-    } 
-    else if (dtypep->widthMin() <= 16) {
-      count = m_smem;
-      m_smem += words;
-    } 
-    else if (dtypep->isQuad()) {
-      count = m_qmem;
-      m_qmem += words;
-    } 
-    else if (dtypep->isWide()) {
-      count = m_imem;
-      m_imem += varp->widthWords() * words;
-    } 
-    else { // IData
-      count = m_imem;
-      m_imem += words;
-    }
-    return count;
-  }
-
-  void sortCells() {
-    std::sort(m_cellps.begin(), m_cellps.end(), [](AstCell* lhs, AstCell* rhs){ return (lhs->modp()->level() > rhs->modp()->level()); });
-  }
-
-
-  public:
-
+public:
     cudaMemAssign() {
-      iterate(v3Global.rootp()); 
+        iterate(v3Global.rootp());
 
-      // top does not belong to cell
-      AstModule* topModp = VN_CAST(v3Global.rootp()->topModulep(), Module);
-      auto& vec = m_modMap[topModp];
-      for(AstVar* varp: vec) {
-        // TODO: I assume we don't have array of array
-        const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
-        size_t loc{0};
-        if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-          loc = countMem(adtypep->subDTypep(), varp, adtypep->declRange().elements());
-        } 
-        else {
-          loc = countMem(dtypep, varp, 1);
-        }
-        varp->setMemLoc(loc);
-      }
-
-      // cells
-      sortCells();
-      AstModule* prev_modp{nullptr};
-      for(AstCell* cellp: m_cellps) {
-        AstModule* cur_modp = VN_CAST(cellp->modp(), Module);
-
-        auto& vec = m_modMap[cur_modp];
-        for(AstVar* varp: vec) {
-          
-          // TODO: I assume we don't have array of array
-          const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
-          size_t loc{0};
-          if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-            loc = countMem(adtypep->subDTypep(), varp, adtypep->declRange().elements());
-          } 
-          else {
-            loc = countMem(dtypep, varp, 1);
-          }
-          m_memLocMap.insert({{cellp, varp}, loc});
-
-          if(prev_modp != cur_modp) {
-            // set base mem location to each AstVar
-            // for CReset
+        // top does not belong to cell
+        AstModule* topModp = VN_CAST(v3Global.rootp()->topModulep(), Module);
+        auto& vec = m_modMap[topModp];
+        for (AstVar* varp : vec) {
+            // TODO: I assume we don't have array of array
+            const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
+            size_t loc{0};
+            if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
+                loc = countMem(adtypep->subDTypep(), varp, adtypep->declRange().elements());
+            } else {
+                loc = countMem(dtypep, varp, 1);
+            }
             varp->setMemLoc(loc);
-          }
         }
 
-        prev_modp = cur_modp;
-      }
-      topModp->cmem(m_cmem);
-      topModp->smem(m_smem);
-      topModp->imem(m_imem);
-      topModp->qmem(m_qmem);
+        // cells
+        sortCells();
+        AstModule* prev_modp{nullptr};
+        for (AstCell* cellp : m_cellps) {
+            AstModule* cur_modp = VN_CAST(cellp->modp(), Module);
+
+            auto& vec = m_modMap[cur_modp];
+            for (AstVar* varp : vec) {
+
+                // TODO: I assume we don't have array of array
+                const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
+                size_t loc{0};
+                if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
+                    loc = countMem(adtypep->subDTypep(), varp, adtypep->declRange().elements());
+                } else {
+                    loc = countMem(dtypep, varp, 1);
+                }
+                m_memLocMap.insert({{cellp, varp}, loc});
+
+                if (prev_modp != cur_modp) {
+                    // set base mem location to each AstVar
+                    // for CReset
+                    varp->setMemLoc(loc);
+                }
+            }
+
+            prev_modp = cur_modp;
+        }
+        topModp->cmem(m_cmem);
+        topModp->smem(m_smem);
+        topModp->imem(m_imem);
+        topModp->qmem(m_qmem);
     }
 
     virtual ~cudaMemAssign() override = default;
 
     void assignLoc(AstVarRef* nodep) {
-      AstVar* varp = nodep->varp();
-      if(varp->isCuda()) {
-        if(nodep->scopep() == nullptr) {
-          // TODO: not sure
-          // base
-          nodep->setMemLoc(varp->memLoc());
-          return;
-        }
-        else if(nodep->scopep()->modp()->isTop()) {
-          // we only have one top module
-          // memory location is already set in AstVar
-          nodep->setMemLoc(varp->memLoc());
-          return;
-        }
+        AstVar* varp = nodep->varp();
+        if (varp->isCuda()) {
+            if (nodep->scopep() == nullptr) {
+                // TODO: not sure
+                // base
+                nodep->setMemLoc(varp->memLoc());
+                return;
+            } else if (nodep->scopep()->modp()->isTop()) {
+                // we only have one top module
+                // memory location is already set in AstVar
+                nodep->setMemLoc(varp->memLoc());
+                return;
+            }
 
-        auto search = m_memLocMap.find({nodep->scopep()->aboveCellp(), varp});
-        if(search != m_memLocMap.end()) {
-          nodep->setMemLoc((*search).second);
+            auto search = m_memLocMap.find({nodep->scopep()->aboveCellp(), varp});
+            if (search != m_memLocMap.end()) {
+                nodep->setMemLoc((*search).second);
+            } else {
+                assert(false);
+            }
         }
-        else {
-          assert(false);
-        }
-      }
     }
-
 };
 
 class cudaMemLocSetter final : public AstNVisitor {
 private:
     // VISITORS
-    virtual void visit(AstNetlist* nodep) override {
-      iterateChildren(nodep);
-    }
+    virtual void visit(AstNetlist* nodep) override { iterateChildren(nodep); }
 
     virtual void visit(AstModule* nodep) override {
-      //m_modp = nodep;
-      iterateChildren(nodep);
-      //m_modp = nullptr;
+        // m_modp = nodep;
+        iterateChildren(nodep);
+        // m_modp = nullptr;
     }
 
-    virtual void visit(AstNode* nodep) override {
-      iterateChildren(nodep);
-    }
+    virtual void visit(AstNode* nodep) override { iterateChildren(nodep); }
 
-    //virtual void visit(AstCReset* nodep) override {
-      //// TODO: currently we skip non-static/non-primayIO reset
-      //AstVarRef* varRefp = nodep->varrefp();
-      //AstVar* varp = varRefp->varp();
-      //if(varp->isCuda()) {
-        //// port ios, local signals,
-        //// TODO scopep == nullptr ? primary IOs, static constant, local variables (should be imppoisble , isCuda())?
-        //if(varRefp->scopep() == nullptr) { 
-          //if(varp->isPrimaryIO() || varp->isStatic()) {
-            //varRefp->setMemLoc(varp->memLoc());
-          //}
-        //}
-      //}
+    // virtual void visit(AstCReset* nodep) override {
+    //// TODO: currently we skip non-static/non-primayIO reset
+    // AstVarRef* varRefp = nodep->varrefp();
+    // AstVar* varp = varRefp->varp();
+    // if(varp->isCuda()) {
+    //// port ios, local signals,
+    //// TODO scopep == nullptr ? primary IOs, static constant, local variables (should be
+    ///imppoisble , isCuda())?
+    // if(varRefp->scopep() == nullptr) {
+    // if(varp->isPrimaryIO() || varp->isStatic()) {
+    // varRefp->setMemLoc(varp->memLoc());
+    //}
+    //}
+    //}
     //}
 
     virtual void visit(AstVarRef* nodep) override {
-      AstVar* varp = nodep->varp();
-      if(varp->isCuda()) {
-        cma.assignLoc(nodep);
-      }
-      iterateChildren(nodep);
+        AstVar* varp = nodep->varp();
+        if (varp->isCuda()) { cma.assignLoc(nodep); }
+        iterateChildren(nodep);
     }
 
     cudaMemAssign cma;
-    
+
 public:
     // CONSTRUCTORS
     cudaMemLocSetter() = default;
     virtual ~cudaMemLocSetter() override = default;
-    void setMemLoc() { 
-      iterate(v3Global.rootp()); 
-    }
+    void setMemLoc() { iterate(v3Global.rootp()); }
 };
 
 class cudaModSizeSetter final : public AstNVisitor {
@@ -4704,97 +4664,89 @@ private:
     size_t m_imem = 0;
     size_t m_qmem = 0;
     std::vector<AstNodeModule*> m_modules;
-    AstNodeModule* m_modp; // current module
+    AstNodeModule* m_modp;  // current module
 
     void countMem(const AstNodeDType* dtypep, AstVar* varp, size_t words) {
         if (dtypep->widthMin() <= 8) {
             m_cmem += words;
-        } 
-        else if (dtypep->widthMin() <= 16) {
-          m_smem += words;
-        } 
-        else if (dtypep->isQuad()) {
-          m_qmem += words;
-        } 
-        else if (dtypep->isWide()) {
-          m_imem += varp->widthWords() * words;
-        } 
-        else { // IData
-          m_imem += words;
+        } else if (dtypep->widthMin() <= 16) {
+            m_smem += words;
+        } else if (dtypep->isQuad()) {
+            m_qmem += words;
+        } else if (dtypep->isWide()) {
+            m_imem += varp->widthWords() * words;
+        } else {  // IData
+            m_imem += words;
         }
     }
-
 
     // VISITORS
     // cacaule size of each type mem
     // exclude cells
     virtual void visit(AstModule* nodep) override {
-      m_cmem = 0;
-      m_smem = 0;
-      m_imem = 0;
-      m_qmem = 0;
-      m_modp = nodep;
-      iterateChildren(nodep);
-      nodep->cmem(m_cmem);
-      nodep->smem(m_smem);
-      nodep->imem(m_imem);
-      nodep->qmem(m_qmem);
-      nodep->isCount(true);
+        m_cmem = 0;
+        m_smem = 0;
+        m_imem = 0;
+        m_qmem = 0;
+        m_modp = nodep;
+        iterateChildren(nodep);
+        nodep->cmem(m_cmem);
+        nodep->smem(m_smem);
+        nodep->imem(m_imem);
+        nodep->qmem(m_qmem);
+        nodep->isCount(true);
     }
 
-    //virtual void visit(AstScope* nodep) override {
+    // virtual void visit(AstScope* nodep) override {
     //}
 
     virtual void visit(AstCell* nodep) override {
-      AstModule* modp = VN_CAST(nodep->modp(), Module);
-      assert(modp->isCount());
+        AstModule* modp = VN_CAST(nodep->modp(), Module);
+        assert(modp->isCount());
     }
 
-    virtual void visit(AstNode* nodep) override {
-      iterateChildren(nodep);
-    }
+    virtual void visit(AstNode* nodep) override { iterateChildren(nodep); }
 
     virtual void visit(AstVar* nodep) override {
-      if(nodep->isCuda()) {
-        // port ios, local signals, local variables
-          // TODO: I assume we don't have array of array
+        if (nodep->isCuda()) {
+            // port ios, local signals, local variables
+            // TODO: I assume we don't have array of array
 
-        //if(m_modp->isTop() || nodep->isStatic()) { 
-            //m_topVars.push_back(nodep);
-            //return;
-        //}
-        //const AstNodeDType* dtypep = nodep->dtypep()->skipRefp();
-        //if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-          ////setVarMemLoc(adtypep->subDTypep(), varp);
-          //countMem(adtypep->subDTypep(), varp, adtypep->declRange().elements());
-        //} 
-        //else {
-          ////setVarMemLoc(dtypep, varp);
-          //countMem(dtypep, varp, 1);
-        //}
+            // if(m_modp->isTop() || nodep->isStatic()) {
+            // m_topVars.push_back(nodep);
+            // return;
+            //}
+            // const AstNodeDType* dtypep = nodep->dtypep()->skipRefp();
+            // if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
+            ////setVarMemLoc(adtypep->subDTypep(), varp);
+            // countMem(adtypep->subDTypep(), varp, adtypep->declRange().elements());
+            //}
+            // else {
+            ////setVarMemLoc(dtypep, varp);
+            // countMem(dtypep, varp, 1);
+            //}
 
-
-        const AstNodeDType* dtypep = nodep->dtypep()->skipRefp();
-        if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-          countMem(adtypep->subDTypep(), nodep, adtypep->declRange().elements());
-        } 
-        else {
-          countMem(dtypep, nodep, 1);
+            const AstNodeDType* dtypep = nodep->dtypep()->skipRefp();
+            if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
+                countMem(adtypep->subDTypep(), nodep, adtypep->declRange().elements());
+            } else {
+                countMem(dtypep, nodep, 1);
+            }
         }
-
-      }
     }
 
     // sort by level
     // last one should not contain any cell
     void sortModules() {
-      for (AstNodeModule* nodep = v3Global.rootp()->modulesp(); nodep;
-         nodep = VN_CAST(nodep->nextp(), NodeModule)) {
-        if (VN_IS(nodep, Class)) continue;  // Imped with ClassPackage
-        m_modules.push_back(nodep);
-      }
+        for (AstNodeModule* nodep = v3Global.rootp()->modulesp(); nodep;
+             nodep = VN_CAST(nodep->nextp(), NodeModule)) {
+            if (VN_IS(nodep, Class)) continue;  // Imped with ClassPackage
+            m_modules.push_back(nodep);
+        }
 
-      std::sort(m_modules.begin(), m_modules.end(), [](AstNodeModule* lhs, AstNodeModule* rhs){ return (lhs->level() > rhs->level()); });
+        std::sort(m_modules.begin(), m_modules.end(), [](AstNodeModule* lhs, AstNodeModule* rhs) {
+            return (lhs->level() > rhs->level());
+        });
     }
 
 public:
@@ -4803,185 +4755,181 @@ public:
     virtual ~cudaModSizeSetter() override = default;
 
     void setModSize() {
-      sortModules();
-      for(auto modp: m_modules) {
-        iterate(modp);
-      }
+        sortModules();
+        for (auto modp : m_modules) { iterate(modp); }
     }
-
 };
 
+// class cudaMemSetter final : public AstNVisitor {
+// private:
+//// MEMBERS
+// size_t m_cmem = 0;
+// size_t m_smem = 0;
+// size_t m_imem = 0;
+// size_t m_qmem = 0;
 
-//class cudaMemSetter final : public AstNVisitor {
-//private:
-    //// MEMBERS
-    //size_t m_cmem = 0;
-    //size_t m_smem = 0;
-    //size_t m_imem = 0;
-    //size_t m_qmem = 0;
+// struct equalVar {
+// bool operator()(const AstVarRef& a, const AstVarRef& b) const {
+////return (a.hiernameProtect() == b.hiernameProtect())
+////&& (a.varp()->nameProtect() == b.varp()->nameProtect());
+// return (a.hiernameToProt() == b.hiernameToProt()
+//&& a.hiernameToUnprot() == b.hiernameToUnprot()
+//&& a.varp()->name() == b.varp()->name());
+//}
+//};
+// struct hash {
+// size_t operator() (const AstVarRef& varRef) const {
+// return std::hash<std::string>()(varRef.hiernameToProt() + varRef.hiernameToUnprot() +
+// varRef.varp()->name());
+//}
+//};
 
-    //struct equalVar {
-      //bool operator()(const AstVarRef& a, const AstVarRef& b) const {
-            ////return (a.hiernameProtect() == b.hiernameProtect())
-                   ////&& (a.varp()->nameProtect() == b.varp()->nameProtect());
-        //return (a.hiernameToProt() == b.hiernameToProt()
-                //&& a.hiernameToUnprot() == b.hiernameToUnprot()
-                //&& a.varp()->name() == b.varp()->name());
-      //}
-    //};
-    //struct hash {
-      //size_t operator() (const AstVarRef& varRef) const {
-        //return std::hash<std::string>()(varRef.hiernameToProt() + varRef.hiernameToUnprot() + varRef.varp()->name());
-      //}
-    //};
+// std::unordered_set<AstVarRef, hash, equalVar>  m_visited;
 
-    //std::unordered_set<AstVarRef, hash, equalVar>  m_visited;
+//// VISITORS
+// virtual void visit(AstNetlist* nodep) override {
+// iterateChildren(nodep);
+//}
 
+// virtual void visit(AstNode* nodep) override {
+// iterateChildren(nodep);
+//}
 
-    //// VISITORS
-    //virtual void visit(AstNetlist* nodep) override {
-      //iterateChildren(nodep);
-    //}
+// virtual void visit(AstCReset* nodep) override {
+//}
 
-    //virtual void visit(AstNode* nodep) override {
-      //iterateChildren(nodep);
-    //}
+// virtual void visit(AstVarRef* nodep) override {
+// AstVar* varp = nodep->varp();
+// if(nodep->modp() == nullptr) {
+// return;
+//}
+// if(varp->isCuda()) {
+//// port ios, local signals, local variables
+// auto search = m_visited.find(*nodep);
+// if(search != m_visited.end()) {
+// nodep->setMemLoc((*search).memLoc());
+//}
+// else {
+//// TODO: I assume we don't have array of array
+// const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
+// if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
+// mem_assign(adtypep->subDTypep(), nodep, adtypep->declRange().elements());
+//} else {
+// mem_assign(dtypep, nodep, 1);
+//}
+// m_visited.insert(*nodep);
+//}
 
-    //virtual void visit(AstCReset* nodep) override {
-    //}
+// if(varp->isIO()) {
+//// for declartion
+// varp->setMemLoc(nodep->memLoc());
+//}
 
-    //virtual void visit(AstVarRef* nodep) override {
-      //AstVar* varp = nodep->varp();
-      //if(nodep->modp() == nullptr) {
-        //return;
-      //}
-      //if(varp->isCuda()) {
-        //// port ios, local signals, local variables
-        //auto search = m_visited.find(*nodep);
-        //if(search != m_visited.end()) {
-          //nodep->setMemLoc((*search).memLoc());
-        //}
-        //else {
-          //// TODO: I assume we don't have array of array
-          //const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
-          //if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-              //mem_assign(adtypep->subDTypep(), nodep, adtypep->declRange().elements());
-          //} else {
-              //mem_assign(dtypep, nodep, 1);
-          //}
-          //m_visited.insert(*nodep);
-        //}
+//}
+//}
 
-        //if(varp->isIO()) {
-          //// for declartion
-          //varp->setMemLoc(nodep->memLoc());
-        //}
+// void mem_assign(const AstNodeDType* dtypep, AstVarRef* varRefp, size_t words) {
+// if (dtypep->widthMin() <= 8) {
+// varRefp->setMemLoc(m_cmem);
+// m_cmem += words;
+//} else if (dtypep->widthMin() <= 16) {
+// varRefp->setMemLoc(m_smem);
+// m_smem += words;
+//} else if (dtypep->isQuad()) {
+// varRefp->setMemLoc(m_qmem);
+// m_qmem += words;
+//} else if (dtypep->isWide()) {
+// varRefp->setMemLoc(m_imem);
+// m_imem += varRefp->widthWords() * words;
+//} else {
+//// IData
+// varRefp->setMemLoc(m_imem);
+// m_imem += words;
+//}
+//}
 
-      //}
-    //}
-
-    //void mem_assign(const AstNodeDType* dtypep, AstVarRef* varRefp, size_t words) {
-        //if (dtypep->widthMin() <= 8) {
-            //varRefp->setMemLoc(m_cmem);
-            //m_cmem += words;
-        //} else if (dtypep->widthMin() <= 16) {
-            //varRefp->setMemLoc(m_smem);
-            //m_smem += words;
-        //} else if (dtypep->isQuad()) {
-            //varRefp->setMemLoc(m_qmem);
-            //m_qmem += words;
-        //} else if (dtypep->isWide()) {
-            //varRefp->setMemLoc(m_imem);
-            //m_imem += varRefp->widthWords() * words;
-        //} else {
-            //// IData
-            //varRefp->setMemLoc(m_imem);
-            //m_imem += words;
-        //}
-    //}
-    
-//public:
-    //// CONSTRUCTORS
-    //cudaMemSetter() = default;
-    //virtual ~cudaMemSetter() override = default;
-    //void setMemLoc() { iterate(v3Global.rootp()); }
-    //size_t cmem() const { return m_cmem; }
-    //size_t smem() const { return m_smem; }
-    //size_t imem() const { return m_imem; }
-    //size_t qmem() const { return m_qmem; }
+// public:
+//// CONSTRUCTORS
+// cudaMemSetter() = default;
+// virtual ~cudaMemSetter() override = default;
+// void setMemLoc() { iterate(v3Global.rootp()); }
+// size_t cmem() const { return m_cmem; }
+// size_t smem() const { return m_smem; }
+// size_t imem() const { return m_imem; }
+// size_t qmem() const { return m_qmem; }
 //};
 // EmitC class functions
 // RTLflow
-//V3EmitC::cells_per_module() {
-  //std::unordered_map<AstModule*, size_t> counts;
-  //for (AstNodeModule* modp = v3Global.rootp()->modulesp(); modp;
-    //modp = VN_CAST(modp->nextp(), NodeModule)) {
-    //if(VN_IS(modp, Class)) continue;  // Imped with ClassPackage // TODO What is this?
-    //auto search = counts.find(modp);
-    //if(search != counts.end()) {
-      //++search->second;
-    //}
-    //else {
-      //counts.insert({modp, 1});
-    //}
-  //}
+// V3EmitC::cells_per_module() {
+// std::unordered_map<AstModule*, size_t> counts;
+// for (AstNodeModule* modp = v3Global.rootp()->modulesp(); modp;
+// modp = VN_CAST(modp->nextp(), NodeModule)) {
+// if(VN_IS(modp, Class)) continue;  // Imped with ClassPackage // TODO What is this?
+// auto search = counts.find(modp);
+// if(search != counts.end()) {
+//++search->second;
+//}
+// else {
+// counts.insert({modp, 1});
+//}
+//}
 //}
 
-//V3EmitC::module_size() {
+// V3EmitC::module_size() {
 //}
 
-//std::tuple<size_t, size_t, size_t, size_t> V3EmitC::cuda_mem() {
+// std::tuple<size_t, size_t, size_t, size_t> V3EmitC::cuda_mem() {
 
-    //// count required cuda memory
-    //size_t cuda_cmem_size{0};
-    //size_t cuda_smem_size{0};
-    //size_t cuda_imem_size{0};
-    //size_t cuda_qmem_size{0};
+//// count required cuda memory
+// size_t cuda_cmem_size{0};
+// size_t cuda_smem_size{0};
+// size_t cuda_imem_size{0};
+// size_t cuda_qmem_size{0};
 
-    //// TODO: I assume we don't have array of array
-    //auto mem_assign = [&](const AstNodeDType* dtypep, AstVar* varp, size_t words = 1) {
-        //if (dtypep->widthMin() <= 8) {
-            //varp->setMemLoc(cuda_cmem_size);
-            //cuda_cmem_size += words;
-        //} else if (dtypep->widthMin() <= 16) {
-            //varp->setMemLoc(cuda_smem_size);
-            //cuda_smem_size += words;
-        //} else if (dtypep->isQuad()) {
-            //varp->setMemLoc(cuda_qmem_size);
-            //cuda_qmem_size += words;
-        //} else if (dtypep->isWide()) {
-            //varp->setMemLoc(cuda_imem_size);
-            //cuda_imem_size += varp->widthWords() * words;
-        //} else {
-            //// IData
-            //varp->setMemLoc(cuda_imem_size);
-            //cuda_imem_size += words;
-        //}
-    //};
+//// TODO: I assume we don't have array of array
+// auto mem_assign = [&](const AstNodeDType* dtypep, AstVar* varp, size_t words = 1) {
+// if (dtypep->widthMin() <= 8) {
+// varp->setMemLoc(cuda_cmem_size);
+// cuda_cmem_size += words;
+//} else if (dtypep->widthMin() <= 16) {
+// varp->setMemLoc(cuda_smem_size);
+// cuda_smem_size += words;
+//} else if (dtypep->isQuad()) {
+// varp->setMemLoc(cuda_qmem_size);
+// cuda_qmem_size += words;
+//} else if (dtypep->isWide()) {
+// varp->setMemLoc(cuda_imem_size);
+// cuda_imem_size += varp->widthWords() * words;
+//} else {
+//// IData
+// varp->setMemLoc(cuda_imem_size);
+// cuda_imem_size += words;
+//}
+//};
 
-    ////for (AstNodeModule* modp = v3Global.rootp()->modulesp(); modp;
-         ////modp = VN_CAST(modp->nextp(), NodeModule)) {
-        ////if (VN_IS(modp, Class)) continue;  // Imped with ClassPackage // TODO What is this?
-        //for (AstNode* nodep = modp->stmtsp(); nodep; nodep = nodep->nextp()) {
-            //if (AstVar* varp = VN_CAST(nodep, Var)) {
-                //if(varp->isCuda()) {
-                    //// port ios, local signals, local variables
+////for (AstNodeModule* modp = v3Global.rootp()->modulesp(); modp;
+////modp = VN_CAST(modp->nextp(), NodeModule)) {
+////if (VN_IS(modp, Class)) continue;  // Imped with ClassPackage // TODO What is this?
+// for (AstNode* nodep = modp->stmtsp(); nodep; nodep = nodep->nextp()) {
+// if (AstVar* varp = VN_CAST(nodep, Var)) {
+// if(varp->isCuda()) {
+//// port ios, local signals, local variables
 
-                    //const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
-                    //if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
-                        //mem_assign(adtypep->subDTypep(), varp, adtypep->declRange().elements());
-                    //} else {
-                        //mem_assign(dtypep, varp);
-                    //}
-                //}
-            //}
-            //else if(AstCell* cellp = VN_CAST(nodep, Cell)) {
-              //if(cellp->modp()) {
-              //}
-            //}
-        //}
-    ////}
-    //return {cuda_cmem_size, cuda_smem_size, cuda_imem_size, cuda_qmem_size};
+// const AstNodeDType* dtypep = varp->dtypep()->skipRefp();
+// if (const auto* adtypep = VN_CAST_CONST(dtypep, UnpackArrayDType)) {
+// mem_assign(adtypep->subDTypep(), varp, adtypep->declRange().elements());
+//} else {
+// mem_assign(dtypep, varp);
+//}
+//}
+//}
+// else if(AstCell* cellp = VN_CAST(nodep, Cell)) {
+// if(cellp->modp()) {
+//}
+//}
+//}
+////}
+// return {cuda_cmem_size, cuda_smem_size, cuda_imem_size, cuda_qmem_size};
 //}
 
 // void V3EmitC::assign_mem_address(AstNodeModule* modp) {
@@ -5111,10 +5059,14 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("return _isignals + idx * idl.size + idl.memloc;\n");
     of.puts("}\n");
     of.puts("RTLflow::RTLflow(size_t num_testbenches):num_testbenches{num_testbenches} {\n");
-    of.puts("checkCuda(cudaMallocManaged(&_csignals, num_testbenches * cuda_cmem_size * sizeof(CData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_ssignals, num_testbenches * cuda_smem_size * sizeof(SData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_qsignals, num_testbenches * cuda_qmem_size * sizeof(QData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_isignals, num_testbenches * cuda_imem_size * sizeof(IData)));\n");
+    of.puts("checkCuda(cudaMallocManaged(&_csignals, num_testbenches * cuda_cmem_size * "
+            "sizeof(CData)));\n");
+    of.puts("checkCuda(cudaMallocManaged(&_ssignals, num_testbenches * cuda_smem_size * "
+            "sizeof(SData)));\n");
+    of.puts("checkCuda(cudaMallocManaged(&_qsignals, num_testbenches * cuda_qmem_size * "
+            "sizeof(QData)));\n");
+    of.puts("checkCuda(cudaMallocManaged(&_isignals, num_testbenches * cuda_imem_size * "
+            "sizeof(IData)));\n");
     of.puts("checkCuda(cudaMallocManaged(&change, num_testbenches * sizeof(IData)));\n");
     of.puts("checkCuda(cudaMemset(change, 1, num_testbenches * sizeof(IData)));\n");
     of.puts("}\n");
@@ -5138,10 +5090,12 @@ void V3EmitC::emitRTLflowImp() {
     // I need to caculate graph size myself
     of.puts("size_t num_threads = (num_testbenches < 1024) ? num_testbenches : 1024;\n");
     of.puts("size_t num_blocks = (num_threads < 1024) ? 1 : num_testbenches / num_threads;\n");
-    of.puts("auto change_cut = _cudaflow.kernel(dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0, "
-            "_change_request, VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
-    of.puts("auto last_assign_cut = _cudaflow.kernel(dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), "
-            "0, _last_assign, _csignals, _ssignals, _isignals, _qsignals);\n");
+    of.puts(
+        "auto change_cut = _cudaflow.kernel(dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0, "
+        "_change_request, VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
+    of.puts(
+        "auto last_assign_cut = _cudaflow.kernel(dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), "
+        "0, _last_assign, _csignals, _ssignals, _isignals, _qsignals);\n");
     of.puts("auto reduce_cut = _cudaflow.reduce(change, change + num_testbenches, change, [] "
             "__device__ (IData a, IData b){ return a | b; });\n");
     of.puts("last_assign_cut.precede(change_cut);\n\n");
@@ -5177,13 +5131,17 @@ void V3EmitC::emitRTLflowImp() {
             + "::_eval_initial(VlSymsp, _csignals, _ssignals, _isignals, _qsignals);\n");
     of.puts("int device;\n");
     of.puts("checkCuda(cudaGetDevice(&device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_csignals, num_testbenches * cuda_cmem_size * sizeof(CData), "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_csignals, num_testbenches * cuda_cmem_size * "
+            "sizeof(CData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_ssignals, num_testbenches * cuda_smem_size * sizeof(SData), "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_ssignals, num_testbenches * cuda_smem_size * "
+            "sizeof(SData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_isignals, num_testbenches * cuda_imem_size * sizeof(IData), "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_isignals, num_testbenches * cuda_imem_size * "
+            "sizeof(IData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_qsignals, num_testbenches * cuda_qmem_size * sizeof(QData), "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_qsignals, num_testbenches * cuda_qmem_size * "
+            "sizeof(QData), "
             "device));\n");
     of.puts("checkCuda(cudaMemPrefetchAsync(change, num_testbenches * sizeof(IData), device));\n");
     of.puts("init = true;\n");
@@ -5207,8 +5165,9 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("});\n");
 
     of.puts("auto init_sim_t = _taskflow.emplace([=](){\n");
-    of.puts("_eval_settle<<<dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0>>>(VlSymsp, _csignals, "
-            "_ssignals, _isignals, _qsignals);\n");
+    of.puts(
+        "_eval_settle<<<dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0>>>(VlSymsp, _csignals, "
+        "_ssignals, _isignals, _qsignals);\n");
     of.puts("checkCuda(cudaDeviceSynchronize());\n");
     of.puts("_cudaflow.offload();\n");
     of.puts("});\n");
@@ -5243,11 +5202,11 @@ void V3EmitC::emitRTLflowImp() {
 
 void V3EmitC::emitc() {
     UINFO(2, __FUNCTION__ << ": " << endl);
-    //auto cuda_mem_sizes = cuda_mem();
-    //size_t cuda_cmem_size = std::get<0>(cuda_mem_sizes);
-    //size_t cuda_smem_size = std::get<1>(cuda_mem_sizes);
-    //size_t cuda_imem_size = std::get<2>(cuda_mem_sizes);
-    //size_t cuda_qmem_size = std::get<3>(cuda_mem_sizes);
+    // auto cuda_mem_sizes = cuda_mem();
+    // size_t cuda_cmem_size = std::get<0>(cuda_mem_sizes);
+    // size_t cuda_smem_size = std::get<1>(cuda_mem_sizes);
+    // size_t cuda_imem_size = std::get<2>(cuda_mem_sizes);
+    // size_t cuda_qmem_size = std::get<3>(cuda_mem_sizes);
 
     cudaModSizeSetter modSetter;
     modSetter.setModSize();

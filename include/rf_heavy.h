@@ -12,11 +12,12 @@ using WData = IData;
 using WDataInP = const WData*;  ///< 'bit' of >64 packed bits as array input to a function
 using WDataOutP = WData*;  ///< 'bit' of >64 packed bits as array output from a function
 
-template <typename DType>
-struct DataLoc final {
-  size_t memloc;
-  size_t size;
-  explicit DataLoc(size_t memloc, size_t size=1): memloc{memloc}, size{size} {}
+template <typename DType> struct DataLoc final {
+    size_t memloc;
+    size_t size;
+    explicit DataLoc(size_t memloc, size_t size = 1)
+        : memloc{memloc}
+        , size{size} {}
 };
 
 typedef DataLoc<CData> CDataLoc;
@@ -44,7 +45,6 @@ typedef DataLoc<IData> IDataLoc;
 #define RF_OUT64(name, msb, lsb) QDataLoc name  ///< Declare output signal, 33-64bits
 #define RF_OUT(name, msb, lsb) IDataLoc name  ///< Declare output signal, 17-32 bits
 #define RF_OUTW(name, msb, lsb, words) IDataLoc name  ///< Declare output signal, 65+ bits
-
 
 template <class T_Value, std::size_t T_Depth> struct RfUnpacked final {
 
@@ -289,4 +289,4 @@ template <std::size_t T_Words> struct RfWide final {
 // return (lhs >> rhs) | (sign & RF_CLEAN_QQ(obits, obits, signext));
 //}
 //
-} // end of namespace RF =========================================================================
+}  // namespace RF

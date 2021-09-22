@@ -111,8 +111,8 @@ public:
                             putMakeClassEntry(of, v3Global.opt.traceSourceLang() + ".cpp");
                         }
                     }
-// RTLflow does not need verilated_threads
-                    //if (v3Global.opt.mtasks()) putMakeClassEntry(of, "verilated_threads.cpp");
+                    // RTLflow does not need verilated_threads
+                    // if (v3Global.opt.mtasks()) putMakeClassEntry(of, "verilated_threads.cpp");
                 } else if (support == 2 && slow) {
                 } else {
                     for (AstNodeFile* nodep = v3Global.rootp()->filesp(); nodep;

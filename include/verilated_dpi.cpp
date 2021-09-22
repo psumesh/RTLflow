@@ -31,7 +31,6 @@
 #include "rf_verilated_dpi.h"
 #include "rf_verilated_imp.h"
 
-
 // On MSVC++ we need svdpi.h to declare exports, not imports
 #define DPI_PROTOTYPES
 #undef XXTERN
@@ -783,4 +782,4 @@ void svAckDisabledState() {
     // Disables not implemented
 }
 
-} // end of namespace RF =========================================================================
+}  // namespace RF
