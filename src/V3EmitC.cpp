@@ -4632,7 +4632,7 @@ private:
     // if(varp->isCuda()) {
     //// port ios, local signals,
     //// TODO scopep == nullptr ? primary IOs, static constant, local variables (should be
-    ///imppoisble , isCuda())?
+    /// imppoisble , isCuda())?
     // if(varRefp->scopep() == nullptr) {
     // if(varp->isPrimaryIO() || varp->isStatic()) {
     // varRefp->setMemLoc(varp->memLoc());

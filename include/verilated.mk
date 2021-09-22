@@ -15,7 +15,7 @@ CXX = g++
 LINK = g++
 AR = ar
 RANLIB = ranlib
-OBJCACHE ?= 
+OBJCACHE ?= ccache
 
 CFG_WITH_CCWARN = no
 CFG_WITH_LONGTESTS = no
