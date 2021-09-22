@@ -27,9 +27,10 @@
 
 #define VERILATOR_VERILATED_DPI_CPP_
 
-#include "verilatedos.h"
-#include "verilated_dpi.h"
-#include "verilated_imp.h"
+#include "rf_verilatedos.h"
+#include "rf_verilated_dpi.h"
+#include "rf_verilated_imp.h"
+
 
 // On MSVC++ we need svdpi.h to declare exports, not imports
 #define DPI_PROTOTYPES
@@ -38,7 +39,10 @@
 #undef EETERN
 #define EETERN DPI_EXTERN DPI_DLLESPEC
 
-#include "vltstd/svdpi.h"
+#include "vltstd/rf_svdpi.h"
+
+// begin of namespace RF =========================================================================
+namespace RF {
 
 //======================================================================
 // Internal macros
@@ -778,3 +782,5 @@ int svIsDisabledState() {
 void svAckDisabledState() {
     // Disables not implemented
 }
+
+} // end of namespace RF =========================================================================

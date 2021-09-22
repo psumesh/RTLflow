@@ -48,7 +48,7 @@
 #define VERILATOR_VERILATED_CPP_
 
 #include "verilatedos.h"
-#include "verilated_imp.h"
+#include "rf_verilated_imp.h"
 
 #include "verilated_config.h"
 
@@ -61,11 +61,14 @@
 #include <limits>
 #include <utility>
 
+
 // clang-format off
 #if defined(_WIN32) || defined(__MINGW32__)
 # include <direct.h>  // mkdir
 #endif
 // clang-format on
+// begin of namespace RF =========================================================================
+namespace RF {
 
 // Max characters in static char string for VL_VALUE_STRING
 constexpr unsigned VL_VALUE_STRING_MAX_WIDTH = 8192;
@@ -1448,16 +1451,20 @@ std::string VL_SFORMATF_NX(const char* formatp, ...) VL_MT_SAFE {
     return t_output;
 }
 
-void VL_WRITEF(const char* formatp, ...) VL_MT_SAFE {
-    static VL_THREAD_LOCAL std::string t_output;  // static only for speed
-    t_output = "";
-    va_list ap;
-    va_start(ap, formatp);
-    _vl_vsformat(t_output, formatp, ap);
-    va_end(ap);
+// TODO: we currently ignore $display 
 
-    VL_PRINTF_MT("%s", t_output.c_str());
-}
+//__device__ __host__
+//void VL_WRITEF(const char* formatp, ...) VL_MT_SAFE {
+    ////static VL_THREAD_LOCAL std::string t_output;  // static only for speed
+    ////t_output = "";
+    ////va_list ap;
+    ////va_start(ap, formatp);
+    ////_vl_vsformat(t_output, formatp, ap);
+    ////va_end(ap);
+
+    ////VL_PRINTF_MT("%s", t_output.c_str());
+//}
+
 
 void VL_FWRITEF(IData fpi, const char* formatp, ...) VL_MT_SAFE {
     // While threadsafe, each thread can only access different file handles
@@ -2970,3 +2977,5 @@ void VerilatedAssertOneThread::fatal_different() VL_MT_SAFE {
 #endif
 
 //===========================================================================
+} // end of namespace RF =========================================================================
+

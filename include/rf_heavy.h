@@ -1,8 +1,50 @@
 #pragma once
-typedef uint32_t IData;  ///< 32-bit unsigned type
+
+// begin of namespace RF =========================================================================
+namespace RF {
+
+typedef unsigned char CData;
+typedef unsigned short int SData;
+typedef uint32_t IData;
+typedef unsigned long QData;
+
 using WData = IData;
 using WDataInP = const WData*;  ///< 'bit' of >64 packed bits as array input to a function
 using WDataOutP = WData*;  ///< 'bit' of >64 packed bits as array output from a function
+
+template <typename DType>
+struct DataLoc final {
+  size_t memloc;
+  size_t size;
+  explicit DataLoc(size_t memloc, size_t size=1): memloc{memloc}, size{size} {}
+};
+
+typedef DataLoc<CData> CDataLoc;
+typedef DataLoc<SData> SDataLoc;
+typedef DataLoc<QData> QDataLoc;
+typedef DataLoc<IData> IDataLoc;
+
+//#define RF_SIG8(name, msb, lsb) CDataLoc name  ///< Declare signal, 1-8 bits
+//#define RF_SIG16(name, msb, lsb) SDataLoc name  ///< Declare signal, 9-16 bits
+//#define RF_SIG64(name, msb, lsb) QDataLoc name  ///< Declare signal, 33-64 bits
+//#define RF_SIG(name, msb, lsb) IDataLoc name  ///< Declare signal, 17-32 bits
+//#define RF_SIGW(name, msb, lsb, words) IDataLoc name  ///< Declare signal, 65+ bits
+#define RF_IN8(name, msb, lsb) CDataLoc name  ///< Declare input signal, 1-8 bits
+#define RF_IN16(name, msb, lsb) SDataLoc name  ///< Declare input signal, 9-16 bits
+#define RF_IN64(name, msb, lsb) QDataLoc name  ///< Declare input signal, 33-64 bits
+#define RF_IN(name, msb, lsb) IDataLoc name  ///< Declare input signal, 17-32 bits
+#define RF_INW(name, msb, lsb, words) IDataLoc name  ///< Declare input signal, 65+ bits
+#define RF_INOUT8(name, msb, lsb) CDataLoc name  ///< Declare bidir signal, 1-8 bits
+#define RF_INOUT16(name, msb, lsb) SDataLoc name  ///< Declare bidir signal, 9-16 bits
+#define RF_INOUT64(name, msb, lsb) QDataLoc name  ///< Declare bidir signal, 33-64 bits
+#define RF_INOUT(name, msb, lsb) IDataLoc name  ///< Declare bidir signal, 17-32 bits
+#define RF_INOUTW(name, msb, lsb) IDataLoc name  ///< Declare bidir signal, 65+ bits
+#define RF_OUT8(name, msb, lsb) CDataLoc name  ///< Declare output signal, 1-8 bits
+#define RF_OUT16(name, msb, lsb) SDataLoc name  ///< Declare output signal, 9-16 bits
+#define RF_OUT64(name, msb, lsb) QDataLoc name  ///< Declare output signal, 33-64bits
+#define RF_OUT(name, msb, lsb) IDataLoc name  ///< Declare output signal, 17-32 bits
+#define RF_OUTW(name, msb, lsb, words) IDataLoc name  ///< Declare output signal, 65+ bits
+
 
 template <class T_Value, std::size_t T_Depth> struct RfUnpacked final {
 
@@ -246,3 +288,5 @@ template <std::size_t T_Words> struct RfWide final {
 // QData signext = ~(RF_MASK_Q(lbits) >> rhs);
 // return (lhs >> rhs) | (sign & RF_CLEAN_QQ(obits, obits, signext));
 //}
+//
+} // end of namespace RF =========================================================================

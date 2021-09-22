@@ -21,10 +21,13 @@
 ///
 //=============================================================================
 
-#include "verilatedos.h"
-#include "verilated_threads.h"
+#include "rf_verilatedos.h"
+#include "rf_verilated_threads.h"
 
 #include <cstdio>
+
+// begin of namespace RF =========================================================================
+namespace RF {
 
 //=============================================================================
 // Globals
@@ -193,3 +196,5 @@ void VlThreadPool::profileDump(const char* filenamep, vluint64_t ticksElapsed)
 
     std::fclose(fp);
 }
+
+} // end of namespace RF =========================================================================

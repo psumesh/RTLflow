@@ -19,8 +19,8 @@
 ///
 //=========================================================================
 
-#ifndef VERILATOR_VERILATED_IMP_H_
-#define VERILATOR_VERILATED_IMP_H_
+#ifndef RF_VERILATED_IMP_H_
+#define RF_VERILATED_IMP_H_
 
 // clang-format off
 #if !defined(VERILATOR_VERILATED_CPP_) && !defined(VERILATOR_VERILATED_DPI_CPP_) \
@@ -29,9 +29,9 @@
 #endif
 
 #include "verilatedos.h"
-#include "verilated.h"
-#include "verilated_heavy.h"
-#include "verilated_syms.h"
+#include "rf_verilated.h"
+#include "rf_verilated_heavy.h"
+#include "rf_verilated_syms.h"
 
 #include <deque>
 #include <set>
@@ -42,6 +42,9 @@
 # include <queue>
 #endif
 // clang-format on
+//
+// begin of namespace RF =========================================================================
+namespace RF {
 
 class VerilatedScope;
 
@@ -133,7 +136,7 @@ public:
     }
 };
 
-// Each thread has a local queue to build up messages until the end of the eval() call
+//// Each thread has a local queue to build up messages until the end of the eval() call
 class VerilatedThreadMsgQueue final {
     std::queue<VerilatedMsg> m_queue;
 
@@ -579,5 +582,6 @@ public:  // But only for verilated*.cpp
 };
 
 //======================================================================
+} // end of namespace RF =========================================================================
 
 #endif  // Guard

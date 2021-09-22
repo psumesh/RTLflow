@@ -23,14 +23,17 @@
 ///
 //*************************************************************************
 
-#ifndef VERILATOR_VERILATED_DPI_H_
-#define VERILATOR_VERILATED_DPI_H_
+#ifndef RF_VERILATED_DPI_H_
+#define RF_VERILATED_DPI_H_
 
 #include "verilatedos.h"
-#include "verilated.h"  // Also presumably included by caller
+#include "rf_verilated.h"  // Also presumably included by caller
 #include "verilated_sym_props.h"
 
 #include "svdpi.h"
+
+// begin of namespace RF =========================================================================
+namespace RF {
 
 //===================================================================
 // SETTING OPERATORS
@@ -91,5 +94,7 @@ static inline void VL_SET_SVLV_Q(int, svLogicVecVal* owp, QData ld) VL_MT_SAFE {
 }
 
 //======================================================================
+
+} // end of namespace RF =========================================================================
 
 #endif  // Guard

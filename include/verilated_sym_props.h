@@ -23,12 +23,15 @@
 //*************************************************************************
 // These classes are thread safe, and read only.
 
-#ifndef VERILATOR_VERILATED_SYM_PROPS_H_
-#define VERILATOR_VERILATED_SYM_PROPS_H_
+#ifndef RF_VERILATED_SYM_PROPS_H_
+#define RF_VERILATED_SYM_PROPS_H_
 
 #include "verilatedos.h"
 
 #include <vector>
+
+// begin of namespace RF =========================================================================
+namespace RF {
 
 //===========================================================================
 // Verilator range
@@ -248,5 +251,7 @@ public:
     const char* name() const { return m_namep; }
     bool isParam() const { return m_isParam; }
 };
+
+} // end of namespace RF =========================================================================
 
 #endif  // Guard

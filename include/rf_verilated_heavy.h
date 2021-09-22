@@ -21,10 +21,10 @@
 ///
 //*************************************************************************
 
-#ifndef VERILATOR_VERILATED_HEAVY_H_
-#define VERILATOR_VERILATED_HEAVY_H_
+#ifndef RF_VERILATED_HEAVY_H_
+#define RF_VERILATED_HEAVY_H_
 
-#include "verilated.h"
+#include "rf_verilated.h"
 
 #include <algorithm>
 #include <array>
@@ -34,6 +34,9 @@
 #include <set>
 #include <string>
 #include <unordered_set>
+
+// begin of namespace RF =========================================================================
+namespace RF {
 
 //===================================================================
 // String formatters (required by below containers)
@@ -977,5 +980,7 @@ inline IData VL_CMP_NN(const std::string& lhs, const std::string& rhs, bool igno
 extern IData VL_ATOI_N(const std::string& str, int base) VL_PURE;
 
 extern IData VL_FGETS_NI(std::string& dest, IData fpi);
+} // end of namespace RF =========================================================================
 
 #endif  // Guard
+

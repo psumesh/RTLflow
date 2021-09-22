@@ -30,12 +30,15 @@
 #define VERILATOR_VERILATED_SYMS_H_
 
 #include "verilatedos.h"
-#include "verilated_heavy.h"
+#include "rf_verilated_heavy.h"
 #include "verilated_sym_props.h"
 
 #include <map>
 #include <unordered_map>
 #include <vector>
+
+// begin of namespace RF =========================================================================
+namespace RF {
 
 //======================================================================
 // Types
@@ -70,5 +73,7 @@ public:
     VerilatedHierarchyMap() = default;
     ~VerilatedHierarchyMap() = default;
 };
+
+} // end of namespace RF =========================================================================
 
 #endif  // Guard
