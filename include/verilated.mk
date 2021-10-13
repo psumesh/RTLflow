@@ -11,25 +11,25 @@
 
 PERL = /usr/bin/perl
 PYTHON3 = /usr/bin/python3
-CXX = nvcc -arch=sm_75 --extended-lambda -I ~/taskflow/taskflow/
-LINK = nvcc
+CXX = g++
+LINK = g++
 AR = ar
 RANLIB = ranlib
-#OBJCACHE ?= ccache
+OBJCACHE ?= ccache
 
 CFG_WITH_CCWARN = no
 CFG_WITH_LONGTESTS = no
 
 # Select newest language
-CFG_CXXFLAGS_STD_NEWEST = -std=c++17
+CFG_CXXFLAGS_STD_NEWEST = -std=gnu++14
 # Select oldest language (for Verilator internal testing only)
 CFG_CXXFLAGS_STD_OLDEST = -std=c++03
 # Compiler flags to use to turn off unused and generated code warnings, such as -Wno-div-by-zero
-#CFG_CXXFLAGS_NO_UNUSED =  -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow
+CFG_CXXFLAGS_NO_UNUSED =  -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow
 # Compiler flags that turn on extra warnings
 CFG_CXXFLAGS_WEXTRA =  -Wextra -Wfloat-conversion -Wlogical-op
 # Linker libraries for multithreading
-CFG_LDLIBS_THREADS =  -lpthread -latomic
+CFG_LDLIBS_THREADS =  -pthread -lpthread -latomic
 
 ######################################################################
 # Programs
@@ -97,12 +97,12 @@ LDLIBS   += $(VM_USER_LDLIBS)
 OPT_SLOW =
 # Optimization for performance critical/hot code. Most time is spent in these
 # routines. Optimizing by default for improved execution speed.
-OPT_FAST = -O2
+OPT_FAST = -Os
 # Optimization applied to the common run-time library used by verilated models.
 # For compatibility this is called OPT_GLOBAL even though it only applies to
 # files in the run-time library. Normally there should be no need for the user
 # to change this as the library is small, but can have significant speed impact.
-OPT_GLOBAL = -O2
+OPT_GLOBAL = -Os
 
 #######################################################################
 ##### SystemC builds
@@ -187,17 +187,17 @@ VK_USER_OBJS   = $(addsuffix .o, $(VM_USER_CLASSES))
 VK_GLOBAL_OBJS = $(addsuffix .o, $(VM_GLOBAL_FAST) $(VM_GLOBAL_SLOW))
 
 ifneq ($(VM_PARALLEL_BUILDS),1)
-  # Fast build for small designs: All .cu files in one fell swoop. This
+  # Fast build for small designs: All .cpp files in one fell swoop. This
   # saves total compute, but can be slower if only a little changes. It is
   # also a lot slower for medium to large designs when the speed of the C
   # compiler dominates, which in this mode is not parallelizable.
 
   VK_OBJS += $(VM_PREFIX)__ALL.o
-  $(VM_PREFIX)__ALL.cu: $(addsuffix .cu, $(VM_FAST) $(VM_SLOW))
+  $(VM_PREFIX)__ALL.cpp: $(addsuffix .cpp, $(VM_FAST) $(VM_SLOW))
 	$(VERILATOR_INCLUDER) -DVL_INCLUDE_OPT=include $^ > $@
-  all_cu: $(VM_PREFIX)__ALL.cu
+  all_cpp: $(VM_PREFIX)__ALL.cpp
 else
-  # Parallel build: Each .cu file by itself. This can be somewhat slower for
+  # Parallel build: Each .cpp file by itself. This can be somewhat slower for
   # very small designs and examples, but is a lot faster for large designs.
 
   VK_OBJS += $(VK_FAST_OBJS) $(VK_SLOW_OBJS)
@@ -242,18 +242,18 @@ $(VM_PREFIX)__ALL.a: $(VK_OBJS) $(VM_HIER_LIBS)
 ifneq ($(VM_DEFAULT_RULES),0)
 # Anything not in $(VK_SLOW_OBJS) or $(VK_GLOBAL_OBJS), including verilated.o
 # and user files passed on the Verilator command line use this rule.
-%.o: %.cu
-	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_FAST) -dc $@ $<
+%.o: %.cpp
+	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_FAST) -c -o $@ $<
 
-$(VK_SLOW_OBJS): %.o: %.cu
-	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_SLOW) -dc $@ $<
+$(VK_SLOW_OBJS): %.o: %.cpp
+	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_SLOW) -c -o $@ $<
 
-$(VK_GLOBAL_OBJS): %.o: %.cu
-	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_GLOBAL) -dc $@ $<
+$(VK_GLOBAL_OBJS): %.o: %.cpp
+	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_GLOBAL) -c -o $@ $<
 endif
 
 #Default rule embedded in make:
-#.cu.o:
+#.cpp.o:
 #	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 ######################################################################
