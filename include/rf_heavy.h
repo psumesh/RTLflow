@@ -3,6 +3,10 @@
 // begin of namespace RF =========================================================================
 namespace RF {
 
+#ifndef NUM_TESTBENCHES
+  #define NUM_TESTBENCHES 1ULL
+#endif
+
 typedef unsigned char CData;
 typedef unsigned short int SData;
 typedef uint32_t IData;

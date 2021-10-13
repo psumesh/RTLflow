@@ -745,132 +745,132 @@ void EmitCSyms::emitSymImp() {
     // Everything past here is in the __Vfinal loop, so start a new split file if needed
     closeSplit();
 
-    if (v3Global.dpi()) {
-        m_ofpBase->puts("// Setup export functions\n");
-        m_ofpBase->puts("for (int __Vfinal=0; __Vfinal<2; __Vfinal++) {\n");
-        for (auto it = m_scopeFuncs.begin(); it != m_scopeFuncs.end(); ++it) {
-            AstScopeName* scopep = it->second.m_scopep;
-            AstCFunc* funcp = it->second.m_cfuncp;
-            AstNodeModule* modp = it->second.m_modp;
-            if (funcp->dpiExport()) {
-                checkSplit(true);
-                puts(protect("__Vscope_" + scopep->scopeSymName()) + ".exportInsert(__Vfinal, ");
-                putsQuoted(funcp->cname());  // Not protected - user asked for import/export
-                puts(", (void*)(&");
-                puts(prefixNameProtect(modp));
-                puts("::");
-                puts(funcp->nameProtect());
-                puts("));\n");
-                ++m_numStmts;
-            }
-        }
-        // It would be less code if each module inserted its own variables.
-        // Someday.  For now public isn't common.
-        for (auto it = m_scopeVars.begin(); it != m_scopeVars.end(); ++it) {
-            checkSplit(true);
-            AstNodeModule* modp = it->second.m_modp;
-            AstScope* scopep = it->second.m_scopep;
-            AstVar* varp = it->second.m_varp;
-            //
-            int pwidth = 1;
-            int pdim = 0;
-            int udim = 0;
-            string bounds;
-            if (AstBasicDType* basicp = varp->basicp()) {
-                // Range is always first, it's not in "C" order
-                if (basicp->isRanged()) {
-                    bounds += " ,";
-                    bounds += cvtToStr(basicp->hi());
-                    bounds += ",";
-                    bounds += cvtToStr(basicp->lo());
-                    pdim++;
-                    pwidth *= basicp->elements();
-                }
-                for (AstNodeDType* dtypep = varp->dtypep(); dtypep;) {
-                    dtypep
-                        = dtypep->skipRefp();  // Skip AstRefDType/AstTypedef, or return same node
-                    if (const AstNodeArrayDType* adtypep = VN_CAST(dtypep, NodeArrayDType)) {
-                        bounds += " ,";
-                        bounds += cvtToStr(adtypep->left());
-                        bounds += ",";
-                        bounds += cvtToStr(adtypep->right());
-                        if (VN_IS(dtypep, PackArrayDType)) {
-                            pdim++;
-                            pwidth *= adtypep->elementsConst();
-                        } else {
-                            udim++;
-                        }
-                        dtypep = adtypep->subDTypep();
-                    } else {
-                        break;  // AstBasicDType - nothing below, 1
-                    }
-                }
-            }
-            // TODO: actually expose packed arrays as vpiRegArray
-            if (pdim > 1 && udim == 0) {
-                bounds = ", ";
-                bounds += cvtToStr(pwidth - 1);
-                bounds += ",0";
-                pdim = 1;
-            }
-            if (pdim > 1 || udim > 1) {
-                puts("//UNSUP ");  // VerilatedImp can't deal with >2d or packed arrays
-            }
-            puts(protect("__Vscope_" + it->second.m_scopeName) + ".varInsert(__Vfinal,");
-            putsQuoted(protect(it->second.m_varBasePretty));
+    //if (v3Global.dpi()) {
+        //m_ofpBase->puts("// Setup export functions\n");
+        //m_ofpBase->puts("for (int __Vfinal=0; __Vfinal<2; __Vfinal++) {\n");
+        //for (auto it = m_scopeFuncs.begin(); it != m_scopeFuncs.end(); ++it) {
+            //AstScopeName* scopep = it->second.m_scopep;
+            //AstCFunc* funcp = it->second.m_cfuncp;
+            //AstNodeModule* modp = it->second.m_modp;
+            //if (funcp->dpiExport()) {
+                //checkSplit(true);
+                //puts(protect("__Vscope_" + scopep->scopeSymName()) + ".exportInsert(__Vfinal, ");
+                //putsQuoted(funcp->cname());  // Not protected - user asked for import/export
+                //puts(", (void*)(&");
+                //puts(prefixNameProtect(modp));
+                //puts("::");
+                //puts(funcp->nameProtect());
+                //puts("));\n");
+                //++m_numStmts;
+            //}
+        //}
+        //// It would be less code if each module inserted its own variables.
+        //// Someday.  For now public isn't common.
+        //for (auto it = m_scopeVars.begin(); it != m_scopeVars.end(); ++it) {
+            //checkSplit(true);
+            //AstNodeModule* modp = it->second.m_modp;
+            //AstScope* scopep = it->second.m_scopep;
+            //AstVar* varp = it->second.m_varp;
+            ////
+            //int pwidth = 1;
+            //int pdim = 0;
+            //int udim = 0;
+            //string bounds;
+            //if (AstBasicDType* basicp = varp->basicp()) {
+                //// Range is always first, it's not in "C" order
+                //if (basicp->isRanged()) {
+                    //bounds += " ,";
+                    //bounds += cvtToStr(basicp->hi());
+                    //bounds += ",";
+                    //bounds += cvtToStr(basicp->lo());
+                    //pdim++;
+                    //pwidth *= basicp->elements();
+                //}
+                //for (AstNodeDType* dtypep = varp->dtypep(); dtypep;) {
+                    //dtypep
+                        //= dtypep->skipRefp();  // Skip AstRefDType/AstTypedef, or return same node
+                    //if (const AstNodeArrayDType* adtypep = VN_CAST(dtypep, NodeArrayDType)) {
+                        //bounds += " ,";
+                        //bounds += cvtToStr(adtypep->left());
+                        //bounds += ",";
+                        //bounds += cvtToStr(adtypep->right());
+                        //if (VN_IS(dtypep, PackArrayDType)) {
+                            //pdim++;
+                            //pwidth *= adtypep->elementsConst();
+                        //} else {
+                            //udim++;
+                        //}
+                        //dtypep = adtypep->subDTypep();
+                    //} else {
+                        //break;  // AstBasicDType - nothing below, 1
+                    //}
+                //}
+            //}
+            //// TODO: actually expose packed arrays as vpiRegArray
+            //if (pdim > 1 && udim == 0) {
+                //bounds = ", ";
+                //bounds += cvtToStr(pwidth - 1);
+                //bounds += ",0";
+                //pdim = 1;
+            //}
+            //if (pdim > 1 || udim > 1) {
+                //puts("//UNSUP ");  // VerilatedImp can't deal with >2d or packed arrays
+            //}
+            //puts(protect("__Vscope_" + it->second.m_scopeName) + ".varInsert(__Vfinal,");
+            //putsQuoted(protect(it->second.m_varBasePretty));
 
-            std::string varName;
-            if (modp->isTop()) {
-                varName += (protectIf(scopep->nameDotless() + "p", scopep->protect()) + "->");
-            } else {
-                varName += (protectIf(scopep->nameDotless(), scopep->protect()) + ".");
-            }
+            //std::string varName;
+            //if (modp->isTop()) {
+                //varName += (protectIf(scopep->nameDotless() + "p", scopep->protect()) + "->");
+            //} else {
+                //varName += (protectIf(scopep->nameDotless(), scopep->protect()) + ".");
+            //}
 
-            if (varp->isParam()) {
-                varName += protect("var_" + varp->name());
-            } else {
-                varName += protect(varp->name());
-            }
+            //if (varp->isParam()) {
+                //varName += protect("var_" + varp->name());
+            //} else {
+                //varName += protect(varp->name());
+            //}
 
-            if (varp->isParam()) {
-                if (varp->vlEnumType() == "VLVT_STRING") {
-                    puts(", const_cast<void*>(static_cast<const void*>(");
-                    puts(varName);
-                    puts(".c_str())), ");
-                } else {
-                    puts(", const_cast<void*>(static_cast<const void*>(&(");
-                    puts(varName);
-                    puts("))), ");
-                }
-            } else {
-                puts(", ");
-                if (varp->widthMin() <= 8) {
-                    puts("_csignals");
-                } else if (varp->widthMin() <= 16) {
-                    puts("_ssignals");
-                } else if (varp->isQuad()) {
-                    puts("_qsignals");
-                } else {
-                    // IData
-                    puts("_isignals");
-                }
-                puts(" + " + varName);
-                puts(", ");
-            }
+            //if (varp->isParam()) {
+                //if (varp->vlEnumType() == "VLVT_STRING") {
+                    //puts(", const_cast<void*>(static_cast<const void*>(");
+                    //puts(varName);
+                    //puts(".c_str())), ");
+                //} else {
+                    //puts(", const_cast<void*>(static_cast<const void*>(&(");
+                    //puts(varName);
+                    //puts("))), ");
+                //}
+            //} else {
+                //puts(", ");
+                //if (varp->widthMin() <= 8) {
+                    //puts("_csignals");
+                //} else if (varp->widthMin() <= 16) {
+                    //puts("_ssignals");
+                //} else if (varp->isQuad()) {
+                    //puts("_qsignals");
+                //} else {
+                    //// IData
+                    //puts("_isignals");
+                //}
+                //puts(" + " + varName);
+                //puts(", ");
+            //}
 
-            puts(varp->isParam() ? "true" : "false");
-            puts(", ");
-            puts(varp->vlEnumType());  // VLVT_UINT32 etc
-            puts(",");
-            puts(varp->vlEnumDir());  // VLVD_IN etc
-            puts(",");
-            puts(cvtToStr(pdim + udim));
-            puts(bounds);
-            puts(");\n");
-            ++m_numStmts;
-        }
-        m_ofpBase->puts("}\n");
-    }
+            //puts(varp->isParam() ? "true" : "false");
+            //puts(", ");
+            //puts(varp->vlEnumType());  // VLVT_UINT32 etc
+            //puts(",");
+            //puts(varp->vlEnumDir());  // VLVD_IN etc
+            //puts(",");
+            //puts(cvtToStr(pdim + udim));
+            //puts(bounds);
+            //puts(");\n");
+            //++m_numStmts;
+        //}
+        //m_ofpBase->puts("}\n");
+    //}
 
     m_ofpBase->puts("}\n");
     puts("} // end of namespace RF ==================================== \n");
