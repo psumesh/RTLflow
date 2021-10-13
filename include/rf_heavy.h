@@ -4,7 +4,7 @@
 namespace RF {
 
 #ifndef NUM_TESTBENCHES
-  #define NUM_TESTBENCHES 1ULL
+#define NUM_TESTBENCHES 1ULL
 #endif
 
 typedef unsigned char CData;

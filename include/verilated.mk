@@ -29,7 +29,7 @@ CFG_CXXFLAGS_STD_OLDEST = -std=c++03
 # Compiler flags that turn on extra warnings
 CFG_CXXFLAGS_WEXTRA =  -Wextra -Wfloat-conversion -Wlogical-op
 # Linker libraries for multithreading
-CFG_LDLIBS_THREADS =  -lpthread -latomic
+CFG_LDLIBS_THREADS =  -pthread -lpthread -latomic
 
 ######################################################################
 # Programs
