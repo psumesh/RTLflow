@@ -11,7 +11,7 @@
 
 PERL = /usr/bin/perl
 PYTHON3 = /usr/bin/python3
-CXX = nvcc -arch=sm_75 --extended-lambda -I ~/taskflow/taskflow/
+CXX = nvcc  -arch=sm_75 --extended-lambda -I ~/taskflow/taskflow/
 LINK = nvcc
 AR = ar
 RANLIB = ranlib
