@@ -1565,7 +1565,7 @@ public:
     virtual string emitVerilog() override { return "%k(%l%f[%r])"; }
     virtual string emitC() override { return "%li%k[%ri]"; }
     string emitCuda1() { return "(%li)[%ri]"; }
-    string emitCuda2() { return "%li + %ri"; }
+    string emitCuda2() { return "%li + %lW * (%ri)"; }
     virtual bool cleanOut() const override { return true; }
     virtual bool cleanLhs() const override { return false; }
     virtual bool cleanRhs() const override { return true; }

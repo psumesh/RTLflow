@@ -11,8 +11,9 @@
 
 PERL = /usr/bin/perl
 PYTHON3 = /usr/bin/python3
+#CXX = nvcc  -arch=sm_75 --extended-lambda -I ~/rtlflow-benchmarks/taskflow/taskflow/
 CXX = nvcc  -arch=sm_75 --extended-lambda -I ~/taskflow/taskflow/
-LINK = nvcc
+LINK = nvcc -arch=sm_75
 AR = ar
 RANLIB = ranlib
 #OBJCACHE ?= ccache
@@ -29,7 +30,7 @@ CFG_CXXFLAGS_STD_OLDEST = -std=c++03
 # Compiler flags that turn on extra warnings
 CFG_CXXFLAGS_WEXTRA =  -Wextra -Wfloat-conversion -Wlogical-op
 # Linker libraries for multithreading
-CFG_LDLIBS_THREADS =  -pthread -lpthread -latomic
+#CFG_LDLIBS_THREADS =  -pthread -lpthread -latomic
 
 ######################################################################
 # Programs
