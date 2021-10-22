@@ -277,6 +277,7 @@ public:
             if (!funcp->ifdef().empty()) puts("#endif  // " + funcp->ifdef() + "\n");
         }
 
+
         for (const AstCFunc* funcp : cudaGlobalsp) {
             puts("friend __global__ void ");
             puts(funcNameProtect(funcp, modp));
@@ -1075,6 +1076,9 @@ public:
             if (varp->isCuda()) {
                 if (auto* backp = VN_CAST(nodep->backp(), NodeSel)) {
                     if (nodep == VN_CAST(backp->fromp(), ArraySel)) {
+                        assert(VN_CAST(backp, WordSel) != nullptr);
+                        // I haven't figure out how to solve all combinations of arrays' of arrays
+                        // Currently I only handle array of "wide" array
                         emitOpName(nodep, nodep->emitCuda2(), nodep->fromp(), nodep->bitp(),
                                    nullptr);
                         return;
@@ -2424,11 +2428,21 @@ void EmitCStmts::emitOpName(AstNode* nodep, const string& format, AstNode* lhsp,
                     needComma = true;
                     break;
                 case 'W':
-                    if (lhsp->isWide()) {
+                    if (detailp->isWide()) {
                         COMMA;
                         puts(cvtToStr(lhsp->widthWords()));
                         needComma = true;
                     }
+                    break;
+                case 'A':
+                    if(auto* varRefp = VN_CAST(detailp, VarRef)) {
+                      auto* varp = varRefp->varp();
+                      if(AstUnpackArrayDType* adtypep = VN_CAST(varp->dtypeSkipRefp(), UnpackArrayDType)) {
+                        puts(cvtToStr(adtypep->arrayUnpackedElements()));
+                        break;
+                      }
+                    }
+                    puts("1");
                     break;
                 case 'i':
                     COMMA;
@@ -3495,6 +3509,38 @@ void EmitCImp::emitInt(AstNodeModule* modp) {
 
     puts("// begin of namespace RF =====================================\n");
     puts("namespace RF {\n");
+        std::vector<const AstCFunc*> cudaGlobalsp;
+
+        for (AstNode* nodep = modp->stmtsp(); nodep; nodep = nodep->nextp()) {
+            if (const AstCFunc* funcp = VN_CAST(nodep, CFunc)) {
+                if (!funcp->skipDecl() && funcp->isMethod()
+                    && !funcp->dpiImport()) {  // DPI is prototyped in __Dpi.h
+                    if (funcp->cudaScope() == "__global__") {
+                        cudaGlobalsp.push_back(funcp);
+                    }
+                }
+            }
+        }
+        for (const AstCFunc* funcp : cudaGlobalsp) {
+            puts("__global__ void ");
+            puts(funcNameProtect(funcp, modp));
+            puts("(" + cFuncArgs(funcp) + ")");
+            puts(";\n");
+        }
+        if (modp->isTop() && v3Global.opt.mtasks()) {
+            // Emit the mtask func prototypes.
+            AstExecGraph* execGraphp = v3Global.rootp()->execGraphp();
+            UASSERT_OBJ(execGraphp, v3Global.rootp(), "Root should have an execGraphp");
+            const V3Graph* depGraphp = execGraphp->depGraphp();
+            for (const V3GraphVertex* vxp = depGraphp->verticesBeginp(); vxp;
+                 vxp = vxp->verticesNextp()) {
+                const ExecMTask* mtp = dynamic_cast<const ExecMTask*>(vxp);
+                puts("__global__ void ");
+                puts(protect(mtp->cFuncName()));
+                puts("(void* symtab, CData* _csignals, SData* _ssignals, IData* _isignals, QData* "
+                     "_qsignals, IData* change);\n");
+            }
+        }
 
     puts("\n//==========\n\n");
 

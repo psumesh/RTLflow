@@ -491,7 +491,7 @@ void EmitCSyms::emitSymHdr() {
     }
 
     puts("\n// METHODS\n");
-    puts("inline const char* name() { return __Vm_namep; }\n");
+    puts("__host__ __device__ inline const char* name() { return __Vm_namep; }\n");
     if (v3Global.opt.savable()) {
         puts("void " + protect("__Vserialize") + "(VerilatedSerialize& os);\n");
         puts("void " + protect("__Vdeserialize") + "(VerilatedDeserialize& os);\n");
