@@ -1228,7 +1228,7 @@ public:
             }
             puts(" + ");
 
-            puts("THREADS * " + cvtToStr(nodep->memLoc()));
+            puts("GPU_THREADS * " + cvtToStr(nodep->memLoc()));
 
             if (!m_isPointer && !dtypep->isWide() && adtypep == nullptr) { puts("]"); }
         } else {
@@ -1727,7 +1727,7 @@ class EmitCImp final : public EmitCStmts {
 
         if (!nodep->device() && (nodep != v3Global.rootp()->initp())) {
             puts("#pragma omp parallel for\n");
-            puts("for(size_t i = 0; i < THREADS; ++i) {\n");
+            puts("for(size_t i = 0; i < GPU_THREADS; ++i) {\n");
         }
 
         iterateAndNextNull(nodep->initsp());
@@ -1739,7 +1739,7 @@ class EmitCImp final : public EmitCStmts {
 
         if (!nodep->device() && (nodep == v3Global.rootp()->initp())) {
             puts("#pragma omp parallel for\n");
-            puts("for(size_t i = 0; i < THREADS; ++i) {\n");
+            puts("for(size_t i = 0; i < GPU_THREADS; ++i) {\n");
         }
 
         if (nodep->finalsp()) putsDecoration("// Final\n");
@@ -1933,17 +1933,17 @@ class EmitCImp final : public EmitCStmts {
         string cell_counter;
         if (dtypep->widthMin() <= 8) {
             signals = "_csignals";
-            cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->cmem());
+            cell_counter = "reset_cell_counter * GPU_THREADS * " + cvtToStr(modp->cmem());
         } else if (dtypep->widthMin() <= 16) {
             signals = "_ssignals";
-            cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->smem());
+            cell_counter = "reset_cell_counter * GPU_THREADS * " + cvtToStr(modp->smem());
         } else if (dtypep->isQuad()) {
             signals = "_qsignals";
-            cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->qmem());
+            cell_counter = "reset_cell_counter * GPU_THREADS * " + cvtToStr(modp->qmem());
         } else {
             // IData
             signals = "_isignals";
-            cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->imem());
+            cell_counter = "reset_cell_counter * GPU_THREADS * " + cvtToStr(modp->imem());
         }
         // printf("%s\n", cell_counter.c_str());
 
@@ -1953,7 +1953,7 @@ class EmitCImp final : public EmitCStmts {
         //
         // std::cerr << varRefp->hiernameProtect() << "   " << varRefp->nameProtect() << "\n";
         const string varNameProtected
-            = cell_counter + " + " + cvtToStr(varRefp->memLoc()) + " * THREADS";
+            = cell_counter + " + " + cvtToStr(varRefp->memLoc()) + " * GPU_THREADS";
 
         if (varp->isIO() && m_modp->isTop() && optSystemC()) {
             // System C top I/O doesn't need loading, as the lower level subinst code does it.}
@@ -2271,7 +2271,7 @@ void EmitCStmts::emitVarDecl(const AstVar* nodep, const string& prefixIfImp) {
         // Num_Testbenches)}");
         const AstNodeDType* dtypep = nodep->dtypep()->skipRefp();
         puts("{");
-        puts(cvtToStr(nodep->memLoc()) + " * THREADS");
+        puts(cvtToStr(nodep->memLoc()) + " * GPU_THREADS");
         if (dtypep->isQuad()) {
             puts("/*QData*/");
         } else if (dtypep->widthMin() <= 8) {
@@ -2806,8 +2806,9 @@ void EmitCImp::emitCtorImp(AstNodeModule* modp) {
         puts(prefixNameProtect(modp) + "::" + prefixNameProtect(modp) + "(sc_module_name)");
     } else if (modp->isTop()) {
         puts(prefixNameProtect(modp) + "::" + prefixNameProtect(modp)
-             + "(VerilatedContext* _vcontextp__, const char* _vcname__)\n");
-        puts("    : VerilatedModule{_vcname__}\n");
+             + "(RTLflow& rtlflow, VerilatedContext* _vcontextp__, const char* _vcname__)\n");
+        puts("    : _rtlflow{rtlflow},\n");
+        puts("     VerilatedModule{_vcname__}\n");
         first = false;  // printed the first ':'
     } else {
         puts(prefixNameProtect(modp) + "::" + prefixNameProtect(modp)
@@ -3504,7 +3505,7 @@ void EmitCImp::emitIntTop(AstNodeModule* modp) {
     //// types defined in svdpi.h are available
     // puts("#include \"" + topClassName() + "__Dpi.h\"\n");
     //}
-    // puts("#define THREADS 2ULL");
+    // puts("#define GPU_THREADS 2ULL");
 }
 
 void EmitCImp::emitInt(AstNodeModule* modp) {
@@ -3623,7 +3624,7 @@ void EmitCImp::emitInt(AstNodeModule* modp) {
     }
     ofp()->putsPrivate(false);  // public:
     if (modp->isTop()) {
-        puts("static RTLflow& _rtlflow;\n");
+        puts("RTLflow& _rtlflow;\n");
         if (v3Global.opt.inhibitSim()) {
             puts("bool __Vm_inhibitSim;  ///< Set true to disable evaluation of module\n");
         }
@@ -3665,10 +3666,10 @@ void EmitCImp::emitInt(AstNodeModule* modp) {
             puts("/// If contextp is null, then the model will use the default global context\n");
             puts("/// If name is \"\", then makes a wrapper with a\n");
             puts("/// single model invisible with respect to DPI scope names.\n");
-            puts(prefixNameProtect(modp) + "(VerilatedContext* contextp,"
+            puts(prefixNameProtect(modp) + "(RTLflow& rtlflow, VerilatedContext* contextp,"
                  + " const char* name = \"TOP\");\n");
-            puts(prefixNameProtect(modp) + "(const char* name = \"TOP\")\n");
-            puts("    : " + prefixNameProtect(modp) + "(nullptr, name) {}\n");
+            puts(prefixNameProtect(modp) + "(RTLflow& rtlflow, const char* name = \"TOP\")\n");
+            puts("    : " + prefixNameProtect(modp) + "(rtlflow, nullptr, name) {}\n");
         } else {
             if (VN_IS(modp, Class)) {
                 // TODO move all constructor definition to e.g. V3CUse
@@ -4475,7 +4476,7 @@ class cudaCheck final : AstNVisitor {
             //}
             // m_ofp->puts(" + ");
 
-            m_ofp->puts("THREADS * " + cvtToStr(nodep->memLoc()));
+            m_ofp->puts("GPU_THREADS * " + cvtToStr(nodep->memLoc()));
 
             m_ofp->puts("]");
 
@@ -4879,22 +4880,6 @@ public:
 //}
 //}
 //};
-//
-class NodesCounter final : public AstNVisitor {
-private:
-    // VISITORS
-    virtual void visit(AstNode* nodep) override { 
-      total_count++;
-      iterateChildren(nodep); 
-    }
-
-public:
-    // CONSTRUCTORS
-    NodesCounter() {
-      iterate(v3Global.rootp());
-    };
-    size_t total_count{0};
-};
 
 class cudaMemLocSetter final : public AstNVisitor {
 private:
@@ -5255,8 +5240,6 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     cfilep->source(false);
     v3Global.rootp()->addFilesp(cfilep);
 
-    NodesCounter counter;
-
     V3OutCFile of(filename);
     of.putsGuard();
     of.puts("\n#include <taskflow.hpp>\n");
@@ -5279,7 +5262,6 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     of.puts("size_t cuda_imem_size{" + cvtToStr(cuda_imem_size) + "};\n");
     of.puts("size_t cuda_qmem_size{" + cvtToStr(cuda_qmem_size) + "};\n");
     of.puts("size_t gpu_threads;\n");
-    of.puts("size_t ast_size{" + cvtToStr(counter.total_count) + "};\n");
     of.puts("int loop{0};\n");
     of.puts("bool init{false};\n");
 
@@ -5404,7 +5386,7 @@ void V3EmitC::emitRTLflowImp() {
                 + "__Vmtask__"
                 + cvtToStr(mtp->id())
                 //+ ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change, done);\n");
-                + ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change, done).name(\"task_"+ cvtToStr(mtp->id())+"\");\n");
+                + ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change, done);\n");
     }
     // puts("__Vchange = " + protect("_change_request") + "(vlSymsp);\n");
 

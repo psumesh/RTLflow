@@ -3,10 +3,10 @@
 // begin of namespace RF =========================================================================
 namespace RF {
 
-#ifdef GPU_THREADS
-   //#define THREADS GPU_THREADS
-   const size_t THREADS = GPU_THREADS;
+#ifndef NUM_TESTBENCHES
+#define NUM_TESTBENCHES 1ULL
 #endif
+
 typedef unsigned char CData;
 typedef unsigned short int SData;
 typedef uint32_t IData;

@@ -1267,6 +1267,7 @@ static inline WDataOutP VL_ALLONES_W(int obits, WDataOutP owp) VL_MT_SAFE {
 // EMIT_RULE: VL_ASSIGN:  oclean=rclean; obits==lbits;
 // For now, we always have a clean rhs.
 // Note: If a ASSIGN isn't clean, use VL_ASSIGNCLEAN instead to do the same thing.
+__device__ __host__
 static inline WDataOutP VL_ASSIGN_W(int obits, WDataOutP owp, WDataInP lwp) VL_MT_SAFE {
     int words = VL_WORDS_I(obits);
     for (int i = 0; i < words; ++i) owp[i] = lwp[i];
@@ -1743,6 +1744,7 @@ static inline IData VL_EQ_W(int words, WDataInP lwp, WDataInP rwp) VL_MT_SAFE {
 }
 
 // Internal usage
+__device__ __host__
 static inline int _vl_cmp_w(int words, WDataInP lwp, WDataInP rwp) VL_MT_SAFE {
     for (int i = words - 1; i >= 0; --i) {
         if (lwp[i] > rwp[i]) return 1;
@@ -2235,7 +2237,7 @@ __host__ __device__ static inline void _vl_insert_WW(int, WDataOutP owp, WDataIn
     }
 }
 
-//__host__ __device__
+__host__ __device__
 static inline void _vl_insert_WQ(int obits, WDataOutP owp, QData ld, int hbit, int lbit,
                                  int rbits = 0) VL_MT_SAFE {
     WData lwp[VL_WQ_WORDS_E];
@@ -2248,6 +2250,7 @@ static inline void _vl_insert_WQ(int obits, WDataOutP owp, QData ld, int hbit, i
 #define VL_REPLICATE_IOI(obits, lbits, rbits, ld, rep) (-(ld))  // Iff lbits==1
 #define VL_REPLICATE_QOI(obits, lbits, rbits, ld, rep) (-(static_cast<QData>(ld)))  // Iff lbits==1
 
+__device__ __host__
 static inline IData VL_REPLICATE_III(int, int lbits, int, IData ld, IData rep) VL_PURE {
     IData returndata = ld;
     for (unsigned i = 1; i < rep; ++i) {
@@ -2256,6 +2259,8 @@ static inline IData VL_REPLICATE_III(int, int lbits, int, IData ld, IData rep) V
     }
     return returndata;
 }
+
+__device__ __host__
 static inline QData VL_REPLICATE_QII(int, int lbits, int, IData ld, IData rep) VL_PURE {
     QData returndata = ld;
     for (unsigned i = 1; i < rep; ++i) {
@@ -2264,6 +2269,8 @@ static inline QData VL_REPLICATE_QII(int, int lbits, int, IData ld, IData rep) V
     }
     return returndata;
 }
+
+__device__ __host__
 static inline WDataOutP VL_REPLICATE_WII(int obits, int lbits, int, WDataOutP owp, IData ld,
                                          IData rep) VL_MT_SAFE {
     owp[0] = ld;
@@ -2272,6 +2279,8 @@ static inline WDataOutP VL_REPLICATE_WII(int obits, int lbits, int, WDataOutP ow
     }
     return owp;
 }
+
+__device__ __host__
 static inline WDataOutP VL_REPLICATE_WQI(int obits, int lbits, int, WDataOutP owp, QData ld,
                                          IData rep) VL_MT_SAFE {
     VL_SET_WQ(owp, ld);
@@ -2280,6 +2289,8 @@ static inline WDataOutP VL_REPLICATE_WQI(int obits, int lbits, int, WDataOutP ow
     }
     return owp;
 }
+
+__device__ __host__
 static inline WDataOutP VL_REPLICATE_WWI(int obits, int lbits, int, WDataOutP owp, WDataInP lwp,
                                          IData rep) VL_MT_SAFE {
     for (int i = 0; i < VL_WORDS_I(lbits); ++i) owp[i] = lwp[i];
@@ -2476,6 +2487,7 @@ static inline WDataOutP VL_CONCAT_WQW(int obits, int lbits, int rbits, WDataOutP
     _vl_insert_WQ(obits, owp, ld, rbits + lbits - 1, rbits);
     return owp;
 }
+__device__ __host__
 static inline WDataOutP VL_CONCAT_WWW(int obits, int lbits, int rbits, WDataOutP owp, WDataInP lwp,
                                       WDataInP rwp) VL_MT_SAFE {
     for (int i = 0; i < VL_WORDS_I(rbits); ++i) owp[i] = rwp[i];
@@ -2642,6 +2654,7 @@ static inline QData VL_SHIFTR_QQQ(int obits, int, int, QData lhs, QData rhs) VL_
 }
 
 // EMIT_RULE: VL_SHIFTRS:  oclean=false; lclean=clean, rclean==clean;
+__device__ __host__
 static inline IData VL_SHIFTRS_III(int obits, int lbits, int, IData lhs, IData rhs) VL_PURE {
     // Note the C standard does not specify the >> operator as a arithmetic shift!
     // IEEE says signed if output signed, but bit position from lbits;
@@ -2664,7 +2677,7 @@ __device__ __host__ static inline IData VL_SHIFTRS_IQI(int obits, int lbits, int
     return static_cast<IData>(VL_SHIFTRS_QQI(obits, lbits, rbits, lhs, rhs));
 }
 
-//__device__ __host__
+__device__ __host__
 static inline WDataOutP VL_SHIFTRS_WWI(int obits, int lbits, int, WDataOutP owp, WDataInP lwp,
                                        IData rd) VL_MT_SAFE {
     int word_shift = VL_BITWORD_E(rd);
@@ -2926,6 +2939,7 @@ static inline void VL_ASSIGNSEL_WIIW(int rbits, int obits, int lsb, WDataOutP ow
 //======================================================================
 // Triops
 
+__device__ __host__
 static inline WDataOutP VL_COND_WIWW(int obits, int, int, int, WDataOutP owp, int cond,
                                      WDataInP w1p, WDataInP w2p) VL_MT_SAFE {
     int words = VL_WORDS_I(obits);

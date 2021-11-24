@@ -11,8 +11,8 @@
 
 PERL = /usr/bin/perl
 PYTHON3 = /usr/bin/python3
-#CXX = nvcc -arch=sm_80 --extended-lambda -I/home/scratch.dianlunl_nvresearch/github/RTLflow-benchmarks/taskflow/ -Xcompiler -fopenmp,
-CXX = nvcc -arch=sm_80 --extended-lambda -I/home/scratch.dianlunl_nvresearch/github/taskflow/taskflow -Xcompiler -fopenmp,
+CXX = nvcc -arch=sm_80 --extended-lambda -I/home/scratch.dianlunl_nvresearch/github/RTLflow-benchmarks/taskflow -Xcompiler -fopenmp,
+#CXX = nvcc -arch=sm_80 --extended-lambda -I/home/scratch.dianlunl_nvresearch/github/taskflow/taskflow -Xcompiler -fopenmp,
 LINK = nvcc -arch=sm_80
 AR = ar
 RANLIB = ranlib

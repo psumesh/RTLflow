@@ -302,7 +302,7 @@ public:
                 // QData* "
                 //"_qsignals, IData* change, IData* done);\n");
                 puts("(void* symtab, CData* _csignals, SData* _ssignals, IData* _isignals, QData* "
-                     "_qsignals, IData* change, bool* done);\n");
+                     "_qsignals, IData* change);\n");
             }
             // No AstCFunc for this one, as it's synthetic. Just write it:
             //  RTLflow
@@ -1228,7 +1228,7 @@ public:
             }
             puts(" + ");
 
-            puts("THREADS * " + cvtToStr(nodep->memLoc()));
+            puts("NUM_TESTBENCHES * " + cvtToStr(nodep->memLoc()));
 
             if (!m_isPointer && !dtypep->isWide() && adtypep == nullptr) { puts("]"); }
         } else {
@@ -1646,12 +1646,12 @@ class EmitCImp final : public EmitCStmts {
         // puts("(void* symtab, CData* _csignals, SData* _ssignals, IData* _isignals, QData* "
         //"_qsignals, IData* change, IData* done) {\n");
         puts("(void* symtab, CData* _csignals, SData* _ssignals, IData* _isignals, QData* "
-             "_qsignals, IData* change, bool* done) {\n");
+             "_qsignals, IData* change) {\n");
 
         // Declare and set vlSymsp
         // puts("if(!change[blockDim.x * blockIdx.x + threadIdx.x] || done[blockDim.x * blockIdx.x
         // + threadIdx.x]) return;\n");
-        puts("if(done[blockDim.x * blockIdx.x + threadIdx.x] || !change[blockDim.x * blockIdx.x + threadIdx.x]) return;\n");
+        puts("if(!change[blockDim.x * blockIdx.x + threadIdx.x]) return;\n");
 
         puts(EmitCBaseVisitor::symClassVar() + " = (" + EmitCBaseVisitor::symClassName()
              + "*)symtab;\n");
@@ -1726,8 +1726,8 @@ class EmitCImp final : public EmitCStmts {
         emitVarList(nodep->stmtsp(), EVL_FUNC_ALL, "", section /*ref*/);
 
         if (!nodep->device() && (nodep != v3Global.rootp()->initp())) {
-            puts("#pragma omp parallel for\n");
-            puts("for(size_t i = 0; i < THREADS; ++i) {\n");
+           puts("#pragma omp parallel for\n ");
+            puts("for(size_t i = 0; i < NUM_TESTBENCHES; ++i) {\n");
         }
 
         iterateAndNextNull(nodep->initsp());
@@ -1738,8 +1738,8 @@ class EmitCImp final : public EmitCStmts {
         if (!m_blkChangeDetVec.empty()) emitChangeDet();
 
         if (!nodep->device() && (nodep == v3Global.rootp()->initp())) {
-            puts("#pragma omp parallel for\n");
-            puts("for(size_t i = 0; i < THREADS; ++i) {\n");
+           puts("#pragma omp parallel for\n ");
+            puts("for(size_t i = 0; i < NUM_TESTBENCHES; ++i) {\n");
         }
 
         if (nodep->finalsp()) putsDecoration("// Final\n");
@@ -1933,17 +1933,17 @@ class EmitCImp final : public EmitCStmts {
         string cell_counter;
         if (dtypep->widthMin() <= 8) {
             signals = "_csignals";
-            cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->cmem());
+            cell_counter = "reset_cell_counter * NUM_TESTBENCHES * " + cvtToStr(modp->cmem());
         } else if (dtypep->widthMin() <= 16) {
             signals = "_ssignals";
-            cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->smem());
+            cell_counter = "reset_cell_counter * NUM_TESTBENCHES * " + cvtToStr(modp->smem());
         } else if (dtypep->isQuad()) {
             signals = "_qsignals";
-            cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->qmem());
+            cell_counter = "reset_cell_counter * NUM_TESTBENCHES * " + cvtToStr(modp->qmem());
         } else {
             // IData
             signals = "_isignals";
-            cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->imem());
+            cell_counter = "reset_cell_counter * NUM_TESTBENCHES * " + cvtToStr(modp->imem());
         }
         // printf("%s\n", cell_counter.c_str());
 
@@ -1953,7 +1953,7 @@ class EmitCImp final : public EmitCStmts {
         //
         // std::cerr << varRefp->hiernameProtect() << "   " << varRefp->nameProtect() << "\n";
         const string varNameProtected
-            = cell_counter + " + " + cvtToStr(varRefp->memLoc()) + " * THREADS";
+            = cell_counter + " + " + cvtToStr(varRefp->memLoc()) + " * NUM_TESTBENCHES";
 
         if (varp->isIO() && m_modp->isTop() && optSystemC()) {
             // System C top I/O doesn't need loading, as the lower level subinst code does it.}
@@ -2271,7 +2271,7 @@ void EmitCStmts::emitVarDecl(const AstVar* nodep, const string& prefixIfImp) {
         // Num_Testbenches)}");
         const AstNodeDType* dtypep = nodep->dtypep()->skipRefp();
         puts("{");
-        puts(cvtToStr(nodep->memLoc()) + " * THREADS");
+        puts(cvtToStr(nodep->memLoc()) + " * NUM_TESTBENCHES");
         if (dtypep->isQuad()) {
             puts("/*QData*/");
         } else if (dtypep->widthMin() <= 8) {
@@ -3504,7 +3504,7 @@ void EmitCImp::emitIntTop(AstNodeModule* modp) {
     //// types defined in svdpi.h are available
     // puts("#include \"" + topClassName() + "__Dpi.h\"\n");
     //}
-    // puts("#define THREADS 2ULL");
+    // puts("#define NUM_TESTBENCHES 2ULL");
 }
 
 void EmitCImp::emitInt(AstNodeModule* modp) {
@@ -3540,7 +3540,7 @@ void EmitCImp::emitInt(AstNodeModule* modp) {
                 puts("__global__ void ");
                 puts(protect(mtp->cFuncName()));
                 puts("(void* symtab, CData* _csignals, SData* _ssignals, IData* _isignals, QData* "
-                     "_qsignals, IData* change, bool* done);\n");
+                     "_qsignals, IData* change);\n");
             }
         }
 
@@ -4475,7 +4475,7 @@ class cudaCheck final : AstNVisitor {
             //}
             // m_ofp->puts(" + ");
 
-            m_ofp->puts("THREADS * " + cvtToStr(nodep->memLoc()));
+            m_ofp->puts("NUM_TESTBENCHES * " + cvtToStr(nodep->memLoc()));
 
             m_ofp->puts("]");
 
@@ -4879,22 +4879,6 @@ public:
 //}
 //}
 //};
-//
-class NodesCounter final : public AstNVisitor {
-private:
-    // VISITORS
-    virtual void visit(AstNode* nodep) override { 
-      total_count++;
-      iterateChildren(nodep); 
-    }
-
-public:
-    // CONSTRUCTORS
-    NodesCounter() {
-      iterate(v3Global.rootp());
-    };
-    size_t total_count{0};
-};
 
 class cudaMemLocSetter final : public AstNVisitor {
 private:
@@ -5255,8 +5239,6 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     cfilep->source(false);
     v3Global.rootp()->addFilesp(cfilep);
 
-    NodesCounter counter;
-
     V3OutCFile of(filename);
     of.putsGuard();
     of.puts("\n#include <taskflow.hpp>\n");
@@ -5278,8 +5260,7 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     of.puts("size_t cuda_smem_size{" + cvtToStr(cuda_smem_size) + "};\n");
     of.puts("size_t cuda_imem_size{" + cvtToStr(cuda_imem_size) + "};\n");
     of.puts("size_t cuda_qmem_size{" + cvtToStr(cuda_qmem_size) + "};\n");
-    of.puts("size_t gpu_threads;\n");
-    of.puts("size_t ast_size{" + cvtToStr(counter.total_count) + "};\n");
+    of.puts("size_t num_testbenches;\n");
     of.puts("int loop{0};\n");
     of.puts("bool init{false};\n");
 
@@ -5289,9 +5270,8 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     of.puts("IData* _isignals{nullptr};\n");
     of.puts("QData* _qsignals{nullptr};\n");
     of.puts("IData* change{nullptr};\n");
-    of.puts("bool*  done{nullptr};\n");
     // of.puts("IData* done{nullptr};\n");
-    of.puts("RTLflow(size_t gpu_threads = 1);\n");
+    of.puts("RTLflow(size_t num_testbenches = 1);\n");
     of.puts("~RTLflow();\n");
     of.puts("void initialize(" + topClassName + "__Syms*);\n");
     of.puts("void run();\n");
@@ -5347,21 +5327,19 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("IData* RTLflow::get(IDataLoc idl, size_t idx) {\n");
     of.puts("return _isignals + idx * idl.size + idl.memloc;\n");
     of.puts("}\n");
-    of.puts("RTLflow::RTLflow(size_t gpu_threads):gpu_threads{gpu_threads} {\n");
-    of.puts("checkCuda(cudaMallocManaged(&_csignals, gpu_threads * cuda_cmem_size * "
+    of.puts("RTLflow::RTLflow(size_t num_testbenches):num_testbenches{num_testbenches} {\n");
+    of.puts("checkCuda(cudaMallocManaged(&_csignals, num_testbenches * cuda_cmem_size * "
             "sizeof(CData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_ssignals, gpu_threads * cuda_smem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_ssignals, num_testbenches * cuda_smem_size * "
             "sizeof(SData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_qsignals, gpu_threads * cuda_qmem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_qsignals, num_testbenches * cuda_qmem_size * "
             "sizeof(QData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_isignals, gpu_threads * cuda_imem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_isignals, num_testbenches * cuda_imem_size * "
             "sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&change, gpu_threads * sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&done, gpu_threads * sizeof(bool)));\n");
-    // of.puts("checkCuda(cudaMallocManaged(&done, gpu_threads * sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMemset(change, 1, gpu_threads * sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMemset(done, 0, gpu_threads * sizeof(bool)));\n");
-    // of.puts("checkCuda(cudaMemset(done, 0, gpu_threads * sizeof(IData)));\n");
+    of.puts("checkCuda(cudaMallocManaged(&change, num_testbenches * sizeof(IData)));\n");
+    // of.puts("checkCuda(cudaMallocManaged(&done, num_testbenches * sizeof(IData)));\n");
+    of.puts("checkCuda(cudaMemset(change, 1, num_testbenches * sizeof(IData)));\n");
+    // of.puts("checkCuda(cudaMemset(done, 0, num_testbenches * sizeof(IData)));\n");
     of.puts("}\n");
     of.puts("RTLflow::~RTLflow() {\n");
     of.puts("checkCuda(cudaFree(_csignals));\n");
@@ -5369,7 +5347,6 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("checkCuda(cudaFree(_qsignals));\n");
     of.puts("checkCuda(cudaFree(_isignals));\n");
     of.puts("checkCuda(cudaFree(change));\n");
-    of.puts("checkCuda(cudaFree(done));\n");
     // of.puts("checkCuda(cudaFree(done));\n");
     of.puts("}\n");
     of.puts("void RTLflow::run() { _executor.run(_taskflow).wait(); }\n");
@@ -5383,15 +5360,15 @@ void V3EmitC::emitRTLflowImp() {
 
     // V3Graph does not have size() function
     // I need to caculate graph size myself
-    of.puts("size_t num_threads = (gpu_threads < 128) ? gpu_threads : 128;\n");
-    of.puts("size_t num_blocks = (num_threads < 128) ? 1 : gpu_threads / num_threads;\n");
+    of.puts("size_t num_threads = (num_testbenches < 1024) ? num_testbenches : 1024;\n");
+    of.puts("size_t num_blocks = (num_threads < 1024) ? 1 : num_testbenches / num_threads;\n");
     of.puts(
         "auto change_cut = _cudaflow.kernel(dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0, "
         "_change_request, VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
     of.puts(
         "auto last_assign_cut = _cudaflow.kernel(dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), "
         "0, _last_assign, _csignals, _ssignals, _isignals, _qsignals);\n");
-    of.puts("auto reduce_cut = _cudaflow.reduce(change, change + gpu_threads, change, [] "
+    of.puts("auto reduce_cut = _cudaflow.reduce(change, change + num_testbenches, change, [] "
             "__device__ (IData a, IData b){ return a | b; });\n");
     of.puts("last_assign_cut.precede(change_cut);\n\n");
     of.puts("change_cut.precede(reduce_cut);\n\n");
@@ -5404,7 +5381,7 @@ void V3EmitC::emitRTLflowImp() {
                 + "__Vmtask__"
                 + cvtToStr(mtp->id())
                 //+ ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change, done);\n");
-                + ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change, done).name(\"task_"+ cvtToStr(mtp->id())+"\");\n");
+                + ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
     }
     // puts("__Vchange = " + protect("_change_request") + "(vlSymsp);\n");
 
@@ -5428,20 +5405,19 @@ void V3EmitC::emitRTLflowImp() {
             + "::_eval_initial(VlSymsp, _csignals, _ssignals, _isignals, _qsignals);\n");
     of.puts("int device;\n");
     of.puts("checkCuda(cudaGetDevice(&device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_csignals, gpu_threads * cuda_cmem_size * "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_csignals, num_testbenches * cuda_cmem_size * "
             "sizeof(CData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_ssignals, gpu_threads * cuda_smem_size * "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_ssignals, num_testbenches * cuda_smem_size * "
             "sizeof(SData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_isignals, gpu_threads * cuda_imem_size * "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_isignals, num_testbenches * cuda_imem_size * "
             "sizeof(IData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_qsignals, gpu_threads * cuda_qmem_size * "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_qsignals, num_testbenches * cuda_qmem_size * "
             "sizeof(QData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(change, gpu_threads * sizeof(IData), device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(done, gpu_threads * sizeof(bool), device));\n");
+    of.puts("checkCuda(cudaMemPrefetchAsync(change, num_testbenches * sizeof(IData), device));\n");
     of.puts("init = true;\n");
     of.puts("return 0;\n");
     of.puts("}\n");
@@ -5475,7 +5451,7 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("});\n");
     of.puts("auto end_t = _taskflow.emplace([=](){\n");
     of.puts("loop = 0;\n");
-    of.puts("checkCuda(cudaMemset(change, 1, sizeof(IData) * gpu_threads));\n");
+    of.puts("checkCuda(cudaMemset(change, 1, sizeof(IData) * num_testbenches));\n");
     of.puts("});\n\n");
     of.puts("auto detect_t = _taskflow.emplace([=](){\n");
     of.puts("if(++loop > 100) {\n");
