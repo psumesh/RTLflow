@@ -19,6 +19,12 @@ A GPU acceleration flow for RTL simulation with multiple testbenches. RTLflow fi
 ~$ g++ --version     # GNU must present with version at least v5.0
 ```
 
+You will also need to set ```$VERILATOR_ROOT``` to RTLflow root directory before using RTLflow. For example:
+```bash
+~$ export VERILATOR_ROOT=~/verilator_rtlflow
+```
+
+
 Open License
 ============
 
