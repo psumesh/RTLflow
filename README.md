@@ -4,7 +4,6 @@ A GPU acceleration flow for RTL simulation with multiple testbenches. RTLflow fi
 
 # Comiple RTLflow
 ```bash
-~$ mv verilator verilator_rtlflow
 ~$ cd verilator_rtlflow
 ~/verilator_rtlflow$ autoconf
 ~/verilator_rtlflow$ ./configure
