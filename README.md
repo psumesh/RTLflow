@@ -1,6 +1,10 @@
-# RTLflow
+# RTLflow <img align="right" src="./logo.png" />
 
-A GPU acceleration flow for RTL simulation with multiple testbenches. RTLflow first transpiles RTL into CUDA kernels that each simulate a partition of the RTL simultaneously across multiple testbenches. It also leverages CUDA Graph for efficient runtime execution. We build RTLflow atop Verilator to inherit its existing optimization facilities, such as variable reduction and partitioning algorithms, that have been rigorously tested for over 25 years in the Verilator community.
+A GPU acceleration flow for RTL simulation with multiple testbenches. 
+
+
+# What is RTLflow?
+RTLflow is a GPU acceleration flow for RTL simulation with multiple testbenches. RTLflow first transpiles RTL into CUDA kernels that each simulate a partition of the RTL simultaneously across multiple testbenches. It also leverages CUDA Graph for efficient runtime execution. We build RTLflow atop Verilator to inherit its existing optimization facilities, such as variable reduction and partitioning algorithms, that have been rigorously tested for over 25 years in the Verilator community.
 
 # Comiple RTLflow
 ```bash
