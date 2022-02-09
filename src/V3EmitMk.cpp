@@ -232,7 +232,7 @@ public:
                 string basename = V3Os::filenameNonExt(cppfile);
                 // NOLINTNEXTLINE(performance-inefficient-string-concatenation)
                 of.puts(basename + ".o: " + cppfile + "\n");
-                of.puts("\t$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_FAST) -dc -o $@ $<\n");
+                of.puts("\t$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_FAST) $(RTLFLOW_FLAGS) -dc -o $@ $<\n");
             }
 
             of.puts("\n### Link rules... (from --exe)\n");

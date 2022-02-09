@@ -5261,7 +5261,7 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     of.putsGuard();
     of.puts("\n#include <taskflow.hpp>\n");
     of.puts("\n#include <rf_heavy.h>\n");
-    of.puts("\n#include <cudaflow.hpp>\n");
+    of.puts("\n#include <cuda/cudaflow.hpp>\n");
 
     of.puts("// begin of namespace RF =====================================\n");
     of.puts("namespace RF {\n");
@@ -5317,6 +5317,7 @@ void V3EmitC::emitRTLflowImp() {
 
     V3OutCFile of(filename);
     of.puts("\n#include <taskflow.hpp>\n");
+    of.puts("\n#include <cuda/algorithm/reduce.hpp>\n");
     of.puts("\n#include \"rtlflow.h\"\n\n");
     of.puts("\n#include \"" + topClassName + ".h\"\n\n");
     of.puts("#include <assert.h>\n\n");

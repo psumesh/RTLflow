@@ -10,19 +10,23 @@
 ######################################################################
 
 PERL = /usr/bin/perl
-PYTHON3 = /usr/bin/python3
-#CXX = nvcc -arch=sm_80 --extended-lambda -I/home/scratch.dianlunl_nvresearch/github/RTLflow-benchmarks/taskflow/ -Xcompiler -fopenmp,
-CXX = nvcc -arch=sm_80 --extended-lambda -I/home/scratch.dianlunl_nvresearch/github/taskflow/taskflow -Xcompiler -fopenmp,
-LINK = nvcc -arch=sm_80
+PYTHON3 = /home/luan/anaconda3/bin/python3
+NVCC = nvcc 
+LINK = $(NVCC) -arch=sm_80 -lpthread  -lgomp
+
+RTLFLOW_FLAGS = -std=c++17 -arch=sm_80 --extended-lambda -I $(VERILATOR_ROOT)/include/taskflow -Xcompiler -fopenmp
+
+# for convience
+CXX = $(NVCC)
 AR = ar
 RANLIB = ranlib
-#OBJCACHE ?= ccache
+OBJCACHE ?= 
 
 CFG_WITH_CCWARN = no
 CFG_WITH_LONGTESTS = no
 
 # Select newest language
-CFG_CXXFLAGS_STD_NEWEST = -std=c++17
+#CFG_CXXFLAGS_STD_NEWEST = -std=gnu++14
 # Select oldest language (for Verilator internal testing only)
 CFG_CXXFLAGS_STD_OLDEST = -std=c++03
 # Compiler flags to use to turn off unused and generated code warnings, such as -Wno-div-by-zero
@@ -31,7 +35,6 @@ CFG_CXXFLAGS_STD_OLDEST = -std=c++03
 CFG_CXXFLAGS_WEXTRA =  -Wextra -Wfloat-conversion -Wlogical-op
 # Linker libraries for multithreading
 #CFG_LDLIBS_THREADS =  -pthread -lpthread -latomic
-CFG_LDLIBS_THREADS =  -lgomp
 
 ######################################################################
 # Programs
@@ -245,13 +248,13 @@ ifneq ($(VM_DEFAULT_RULES),0)
 # Anything not in $(VK_SLOW_OBJS) or $(VK_GLOBAL_OBJS), including verilated.o
 # and user files passed on the Verilator command line use this rule.
 %.o: %.cu
-	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_FAST) -dc $@ $<
+	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_FAST) $(RTLFLOW_FLAGS) -dc $@ $<
 
 $(VK_SLOW_OBJS): %.o: %.cu
-	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_SLOW) -dc $@ $<
+	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_SLOW) $(RTLFLOW_FLAGS) -dc $@ $<
 
 $(VK_GLOBAL_OBJS): %.o: %.cu
-	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_GLOBAL) -dc $@ $<
+	$(OBJCACHE) $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(OPT_GLOBAL) $(RTLFLOW_FLAGS) -dc $@ $<
 endif
 
 #Default rule embedded in make:
