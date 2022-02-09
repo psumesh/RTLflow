@@ -8,25 +8,31 @@ RTLflow is a GPU acceleration flow for RTL simulation with multiple testbenches.
 
 # Comiple RTLflow
 ```bash
-~$ cd verilator_rtlflow
-~/verilator_rtlflow$ autoconf
-~/verilator_rtlflow$ ./configure
-~/verilator_rtlflow$ make -j8
+~$ cd RTLflow
+~/RTLflow$ autoconf
+~/RTLflow$ ./configure
+~/RTLflow$ make -j8
 ```
 
 # Use RTLflow
  To use RTLflow, you need:
- * Nvidia CUDA Toolkit and Compiler ([nvcc](https://developer.nvidia.com/cuda-llvm-compiler)) at least v10.0 with -std=c++14.
- * GNU C++ Compiler at least v5.0 with -std=c++14.
+ * Nvidia CUDA Toolkit and Compiler ([nvcc](https://developer.nvidia.com/cuda-llvm-compiler)) at least v11.0 with -std=c++17.
+ * GNU C++ Compiler at least v5.0 with -std=c++17.
 ```bash
-~$ nvcc --version    # NVCC must present with version at least v10.0
-~$ g++ --version     # GNU must present with version at least v5.0
+~$ nvcc --version    # NVCC must present with version at least v11.0
+~$ g++ --version     # GNU must present with version at least v8.0
 ```
 
 You will also need to set ```$VERILATOR_ROOT``` to RTLflow root directory before using RTLflow. For example:
 ```bash
-~$ export VERILATOR_ROOT=~/verilator_rtlflow
+~$ export VERILATOR_ROOT=~/RTLflow
 ```
+
+By default, we set nvcc flag ```--arch=sm_80``` to achieve the best performance under our enviornment. You can go to:
+```bash
+~/RTLflow/include/verilated.mk.in
+```
+to modify ```$RTLFLOW_FLAGS```.
 
 
 Open License
