@@ -47,15 +47,15 @@ obj_dbg:
 
 .SUFFIXES:
 
-.PHONY: ../bin/verilator_bin$(EXEEXT) ../bin/verilator_bin_dbg$(EXEEXT) ../bin/verilator_coverage_bin_dbg$(EXEEXT)
+.PHONY: ../bin/rtlflow$(EXEEXT) ../bin/verilator_bin_dbg$(EXEEXT) ../bin/verilator_coverage_bin_dbg$(EXEEXT)
 
-opt: ../bin/verilator_bin$(EXEEXT)
+opt: ../bin/rtlflow$(EXEEXT)
 ifeq ($(VERILATOR_NO_OPT_BUILD),1)	# Faster laptop development... One build
-../bin/verilator_bin$(EXEEXT): ../bin/verilator_bin_dbg$(EXEEXT)
+../bin/rtlflow$(EXEEXT): ../bin/verilator_bin_dbg$(EXEEXT)
 	-cp -p $< $@.tmp
 	-mv -f $@.tmp $@
 else
-../bin/verilator_bin$(EXEEXT): obj_opt ../bin prefiles
+../bin/rtlflow$(EXEEXT): obj_opt ../bin prefiles
 	$(MAKE) -C obj_opt -j 1  TGT=../$@ -f ../Makefile_obj serial
 	$(MAKE) -C obj_opt       TGT=../$@ -f ../Makefile_obj
 endif
