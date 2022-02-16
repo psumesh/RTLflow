@@ -132,7 +132,7 @@ Pipe{PipeType::SERIAL, [](tf::Pipeflow&){}}
 The pipeflow object is used to query the statistics of a scheduling token
 in the pipeline, such as pipe, line, and token numbers.
 */
-template <typename C>
+template <typename C = std::function<void(tf::Pipeflow&)>>
 class Pipe {
 
   template <typename... Ps>
@@ -778,6 +778,9 @@ class ScalablePipeline {
   */
   using pipe_type = typename std::iterator_traits<P>::value_type;
   
+  
+  ScalablePipeline() = default;
+  
   /**
   @brief constructs an empty scalable pipeline object
 
@@ -841,6 +844,8 @@ class ScalablePipeline {
   start from zero.
   */
   void reset(P first, P last);
+
+  void reset(size_t num_lines, P first, P last);
   
   /**
   @brief queries the number of generated tokens in the pipeline
@@ -862,7 +867,7 @@ class ScalablePipeline {
   
   Graph _graph;
 
-  size_t _num_tokens;
+  size_t _num_tokens{0};
 
   std::vector<P> _pipes;
   std::vector<Task> _tasks;
@@ -930,6 +935,22 @@ Graph& ScalablePipeline<P>::graph() {
 template <typename P>
 typename ScalablePipeline<P>::Line& ScalablePipeline<P>::_line(size_t l, size_t p) {
   return _lines[l*num_pipes() + p];
+}
+
+template <typename P>
+void ScalablePipeline<P>::reset(size_t num_lines, P first, P last) {
+  if(num_lines == 0) {
+    TF_THROW("must have at least one line");
+  }
+
+  _graph._clear();
+  _tasks.clear();     
+  _pipeflows.clear();
+
+  _tasks.resize(num_lines + 1);
+  _pipeflows.resize(num_lines);
+  reset(first, last);
+  _build();
 }
 
 // Function: reset

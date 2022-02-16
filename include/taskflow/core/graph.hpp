@@ -62,6 +62,9 @@ class Graph {
   friend class Taskflow;
   friend class Executor;
 
+  template <typename P>
+  friend class ScalablePipeline;
+
   public:
     
     /**
