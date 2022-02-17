@@ -1409,7 +1409,8 @@ static inline void VL_ASSIGNBIT_WO(int, int bit, WDataOutP owp, IData) VL_MT_SAF
 #define VL_EXTEND_QI(obits, lbits, lhs) (static_cast<QData>(lhs))
 #define VL_EXTEND_QQ(obits, lbits, lhs) ((lhs))
 
-__device__ __host__ static inline WDataOutP VL_EXTEND_WI(int obits, int, WDataOutP owp,
+__device__ __host__ 
+static inline WDataOutP VL_EXTEND_WI(int obits, int, WDataOutP owp,
                                                          IData ld) VL_MT_SAFE {
     // Note for extracts that obits != lbits
     owp[0] = ld;
@@ -1417,14 +1418,16 @@ __device__ __host__ static inline WDataOutP VL_EXTEND_WI(int obits, int, WDataOu
     return owp;
 }
 
-__device__ __host__ static inline WDataOutP VL_EXTEND_WQ(int obits, int, WDataOutP owp,
+__device__ __host__ 
+static inline WDataOutP VL_EXTEND_WQ(int obits, int, WDataOutP owp,
                                                          QData ld) VL_MT_SAFE {
     VL_SET_WQ(owp, ld);
     for (int i = VL_WQ_WORDS_E; i < VL_WORDS_I(obits); ++i) owp[i] = 0;
     return owp;
 }
 
-__device__ __host__ static inline WDataOutP VL_EXTEND_WW(int obits, int lbits, WDataOutP owp,
+__device__ __host__ 
+static inline WDataOutP VL_EXTEND_WW(int obits, int lbits, WDataOutP owp,
                                                          WDataInP lwp) VL_MT_SAFE {
     for (int i = 0; i < VL_WORDS_I(lbits); ++i) owp[i] = lwp[i];
     for (int i = VL_WORDS_I(lbits); i < VL_WORDS_I(obits); ++i) owp[i] = 0;
@@ -2148,6 +2151,8 @@ static inline void _vl_insert_QQ(int, QData& lhsr, QData ld, int hbit, int lbit,
     QData insmask = (VL_MASK_Q(hbit - lbit + 1)) << lbit;
     lhsr = (lhsr & ~insmask) | ((ld << lbit) & (insmask & cleanmask));
 }
+
+__device__ __host__
 static inline void _vl_insert_WI(int, WDataOutP owp, IData ld, int hbit, int lbit,
                                  int rbits = 0) VL_MT_SAFE {
     int hoffset = VL_BITBIT_E(hbit);

@@ -475,9 +475,11 @@ void EmitCSyms::emitSymHdr() {
     }
 
     puts("\n// CREATORS\n");
+    //puts(symClassName() + "(VerilatedContext* contextp, " + topClassName()
+         //+ "* topp, CData* _csignals, SData* _ssignals,  IData* _isignals, QData* _qsignals, "
+           //"const char* namep);\n");
     puts(symClassName() + "(VerilatedContext* contextp, " + topClassName()
-         + "* topp, CData* _csignals, SData* _ssignals,  IData* _isignals, QData* _qsignals, "
-           "const char* namep);\n");
+         + "* topp, const char* namep);\n");
     puts(string("~") + symClassName() + "();\n");
 
     for (const auto& i : m_usesVfinal) {
@@ -657,9 +659,11 @@ void EmitCSyms::emitSymImp() {
     puts("{\n");
     emitScopeHier(true);
     puts("}\n\n");
+    //puts(symClassName() + "::" + symClassName() + "(VerilatedContext* contextp, " + topClassName()
+         //+ "* topp, CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, const "
+           //"char* namep)\n");
     puts(symClassName() + "::" + symClassName() + "(VerilatedContext* contextp, " + topClassName()
-         + "* topp, CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals, const "
-           "char* namep)\n");
+         + "* topp, const char* namep)\n");
     puts("    // Setup locals\n");
     puts("    : VerilatedSyms{contextp}\n");
     puts("    , __Vm_namep(namep)\n");  // No leak, as gets destroyed when the top is destroyed
@@ -680,7 +684,8 @@ void EmitCSyms::emitSymImp() {
         if (modp->isTop()) {
         } else {
             puts(string("    ") + comma + " " + protect(scopep->nameDotless()));
-            puts("(_csignals, _ssignals, _isignals, _qsignals, Verilated::catName(topp->name(), ");
+            //puts("(_csignals, _ssignals, _isignals, _qsignals, Verilated::catName(topp->name(), ");
+            puts("(Verilated::catName(topp->name(), ");
             // The "." is added by catName
             putsQuoted(protectWordsIf(scopep->prettyName(), scopep->protect()));
             puts("))\n");
