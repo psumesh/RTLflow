@@ -5,7 +5,7 @@ namespace RF {
 
 #ifdef GPU_THREADS
    //#define THREADS GPU_THREADS
-   const size_t THREADS = GPU_THREADS;
+   constexpr size_t THREADS = GPU_THREADS;
 #endif
 typedef unsigned char CData;
 typedef unsigned short int SData;

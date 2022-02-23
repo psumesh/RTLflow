@@ -1846,13 +1846,13 @@ class EmitCImp final : public EmitCStmts {
     }
 
     virtual void visit(AstCReset* nodep) override {
-        // AstVar* varp = nodep->varrefp()->varp();
-        // if(nodep->varrefp()->scopep() == nullptr) {
-        // if(!(varp->isPrimaryIO() || varp->isStatic())) {
-        // return;
+         //AstVar* varp = nodep->varrefp()->varp();
+         //if(nodep->varrefp()->scopep() == nullptr) {
+         //if(!(varp->isPrimaryIO() || varp->isStatic())) {
+         //return;
         //}
         //}
-        //emitVarReset(nodep->varrefp());
+        emitVarReset(nodep->varrefp());
     }
 
     // RTLflow
@@ -1924,184 +1924,185 @@ class EmitCImp final : public EmitCStmts {
         puts(nl);
     }
 
-    //void emitVarReset(AstVarRef* varRefp) {
-        //AstVar* varp = varRefp->varp();
-        //AstNodeDType* const dtypep = varp->dtypep()->skipRefp();
+    void emitVarReset(AstVarRef* varRefp) {
+        AstVar* varp = varRefp->varp();
+        AstNodeDType* const dtypep = varp->dtypep()->skipRefp();
 
-        //AstModule* modp = VN_CAST(m_modp, Module);
-        //string signals;
+        AstModule* modp = VN_CAST(m_modp, Module);
+        string signals;
         //string cell_counter;
-        //if (dtypep->widthMin() <= 8) {
-            //signals = "_csignals";
+        if (dtypep->widthMin() <= 8) {
+            signals = "_csignals";
             //cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->cmem());
-        //} else if (dtypep->widthMin() <= 16) {
-            //signals = "_ssignals";
+        } else if (dtypep->widthMin() <= 16) {
+            signals = "_ssignals";
             //cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->smem());
-        //} else if (dtypep->isQuad()) {
-            //signals = "_qsignals";
+        } else if (dtypep->isQuad()) {
+            signals = "_qsignals";
             //cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->qmem());
-        //} else {
-            //// IData
-            //signals = "_isignals";
+        } else {
+            // IData
+            signals = "_isignals";
             //cell_counter = "reset_cell_counter * THREADS * " + cvtToStr(modp->imem());
-        //}
-        //// printf("%s\n", cell_counter.c_str());
+        }
+        // printf("%s\n", cell_counter.c_str());
 
-        //// TODO: change name
-        //// const string varNameProtected
-        ////= VN_IS(m_modp, Class) ? varp->nameProtect() : "self->" + varp->nameProtect();
-        ////
-        //// std::cerr << varRefp->hiernameProtect() << "   " << varRefp->nameProtect() << "\n";
-        //const string varNameProtected
+        // TODO: change name
+        // const string varNameProtected
+        //= VN_IS(m_modp, Class) ? varp->nameProtect() : "self->" + varp->nameProtect();
+        //
+        // std::cerr << varRefp->hiernameProtect() << "   " << varRefp->nameProtect() << "\n";
+        const string varNameProtected
+            = cvtToStr(varRefp->memLoc()) + " * THREADS";
             //= cell_counter + " + " + cvtToStr(varRefp->memLoc()) + " * THREADS";
 
-        //if (varp->isIO() && m_modp->isTop() && optSystemC()) {
-            //// System C top I/O doesn't need loading, as the lower level subinst code does it.}
-        //} else if (varp->isParam()) {
-            //UASSERT_OBJ(varp->valuep(), varp, "No init for a param?");
-            //// If a simple CONST value we initialize it using an enum
-            //// If an ARRAYINIT we initialize it using an initial block similar to a signal
-            //// puts("// parameter "+varp->nameProtect()+" = "+varp->valuep()->name()+"\n");
-        //} else if (AstInitArray* initarp = VN_CAST(varp->valuep(), InitArray)) {
-            //if (AstUnpackArrayDType* adtypep = VN_CAST(dtypep, UnpackArrayDType)) {
-                //if (initarp->defaultp()) {
-                    //puts("for (int __Vi=0; __Vi<" + cvtToStr(adtypep->elementsConst()));
-                    //puts("; ++__Vi) {\n");
-                    //emitSetVarConstant(signals + "[i * "
-                                           //+ cvtToStr(adtypep->declRange().elements()) + " + "
-                                           //+ varNameProtected + " + __Vi]",
-                                       //VN_CAST(initarp->defaultp(), Const));
-                    //puts("}\n");
-                //}
-                //const AstInitArray::KeyItemMap& mapr = initarp->map();
-                //for (const auto& itr : mapr) {
-                    //AstNode* valuep = itr.second->valuep();
-                    //emitSetVarConstant(signals + "[i * "
-                                           //+ cvtToStr(adtypep->declRange().elements()) + " + "
-                                           //+ varNameProtected + " + " + cvtToStr(itr.first) + "]",
-                                       //VN_CAST(valuep, Const));
-                //}
-            //} else {
-                //varp->v3fatalSrc("InitArray under non-arrayed var");
-            //}
-        //} else {
-            //puts(emitVarResetRecurse(varp, varNameProtected, dtypep, 0, ""));
-        //}
-    //}
-    //// TODO : need to modify
-    //string emitVarResetRecurse(const AstVar* varp, const string& varNameProtected,
-                               //AstNodeDType* dtypep, int depth, const string& suffix) {
-        //dtypep = dtypep->skipRefp();
-        //AstBasicDType* basicp = dtypep->basicp();
-        //string signals;
-        //if (dtypep->widthMin() <= 8) {
-            //signals = "_csignals";
-        //} else if (dtypep->widthMin() <= 16) {
-            //signals = "_ssignals";
-        //} else if (dtypep->isQuad()) {
-            //signals = "_qsignals";
-        //} else {
-            //// IData
-            //signals = "_isignals";
-        //}
-        //// Returns string to do resetting, empty to do nothing (which caller should handle)
-        //if (AstAssocArrayDType* adtypep = VN_CAST(dtypep, AssocArrayDType)) {
-            //// Access std::array as C array
-            //string cvtarray = (adtypep->subDTypep()->isWide() ? ".data()" : "");
-            //return emitVarResetRecurse(varp, varNameProtected, adtypep->subDTypep(), depth + 1,
-                                       //suffix + ".atDefault()" + cvtarray);
-        //} else if (VN_IS(dtypep, ClassRefDType)) {
-            //return "";  // Constructor does it
-        //} else if (AstDynArrayDType* adtypep = VN_CAST(dtypep, DynArrayDType)) {
-            //// Access std::array as C array
-            //string cvtarray = (adtypep->subDTypep()->isWide() ? ".data()" : "");
-            //return emitVarResetRecurse(varp, varNameProtected, adtypep->subDTypep(), depth + 1,
-                                       //suffix + ".atDefault()" + cvtarray);
-        //} else if (AstQueueDType* adtypep = VN_CAST(dtypep, QueueDType)) {
-            //// Access std::array as C array
-            //string cvtarray = (adtypep->subDTypep()->isWide() ? ".data()" : "");
-            //return emitVarResetRecurse(varp, varNameProtected, adtypep->subDTypep(), depth + 1,
-                                       //suffix + ".atDefault()" + cvtarray);
-        //} else if (AstUnpackArrayDType* adtypep = VN_CAST(dtypep, UnpackArrayDType)) {
-            //UASSERT_OBJ(adtypep->hi() >= adtypep->lo(), varp,
-                        //"Should have swapped msb & lsb earlier.");
-            //string ivar = string("__Vi") + cvtToStr(depth);
-            //string pre = ("for (int " + ivar + "=" + cvtToStr(0) + "; " + ivar + "<"
-                          //+ cvtToStr(adtypep->elementsConst()) + "; ++" + ivar + ") {\n");
-            //if (dtypep->isWide() && (varp->valuep() == nullptr)) {
-                //ivar += " * " + cvtToStr(varp->widthWords());
-            //}
-            //string below = emitVarResetRecurse(varp, varNameProtected, adtypep->subDTypep(),
-                                               //depth + 1, suffix + ivar);
-            //string post = "}\n";
-            //return below.empty() ? "" : pre + below + post;
-        //} else if (basicp && basicp->keyword() == AstBasicDTypeKwd::STRING) {
-            //// String's constructor deals with it
-            //return "";
-        //} else if (basicp) {
-            //bool zeroit
-                //= (varp->attrFileDescr()  // Zero so we don't core dump if never $fopen
-                   //|| (basicp && basicp->isZeroInit())
-                   //|| (v3Global.opt.underlineZero() && !varp->name().empty()
-                       //&& varp->name()[0] == '_')
-                   //|| (v3Global.opt.xInitial() == "fast" || v3Global.opt.xInitial() == "0"));
-            //splitSizeInc(1);
-            //if (dtypep->isWide()) {  // Handle unpacked; not basicp->isWide
-                //string out;
-                //if (varp->valuep()) {
-                    //AstConst* const constp = VN_CAST(varp->valuep(), Const);
-                    //if (!constp) varp->v3fatalSrc("non-const initializer for variable");
-                    //for (int w = 0; w < varp->widthWords(); ++w) {
-                        //if (suffix.empty()) {
-                            //out += signals + "[i * " + cvtToStr(varp->widthWords()) + " + "
-                                   //+ varNameProtected + " + " + cvtToStr(w) + "] = ";
-                        //} else {
-                            //out += signals + "[i * " + cvtToStr(varp->widthWords()) + " + "
-                                   //+ varNameProtected + " + " + suffix + " + " + cvtToStr(w)
-                                   //+ "] = ";
-                        //}
-                        //out += cvtToStr(constp->num().edataWord(w)) + "U;\n";
-                    //}
-                //} else {
-                    //out += zeroit ? "VL_ZERO_RESET_W(" : "VL_RAND_RESET_W(";
-                    //out += cvtToStr(dtypep->widthMin());
-                    //out += ", " + signals + " + i * " + cvtToStr(dtypep->widthWords()) + " + "
-                           //+ varNameProtected;
-                    //if (!suffix.empty()) { out += " + " + suffix; }
-                    //out += ");\n";
-                //}
-                //return out;
-            //} else {
-                //string out;
-                //if (AstUnpackArrayDType* adtypep = VN_CAST(varp->dtypep(), UnpackArrayDType)) {
-                    //out = signals + "[i * " + cvtToStr(adtypep->elementsConst()) + " + "
-                          //+ varNameProtected;
-                //} else if (varp->isWide()) {
-                    //out = signals + "[i * " + cvtToStr(varp->widthWords()) + " + "
-                          //+ varNameProtected;
-                //} else {
-                    //out = signals + "[i + " + varNameProtected;
-                //}
-                //(suffix.empty()) ? out += "]" : out += " + " + suffix + "]";
-                //// If --x-initial-edge is set, we want to force an initial
-                //// edge on uninitialized clocks (from 'X' to whatever the
-                //// first value is). Since the class is instantiated before
-                //// initial blocks are evaluated, this should not clash
-                //// with any initial block settings.
-                //if (zeroit || (v3Global.opt.xInitialEdge() && varp->isUsedClock())) {
-                    //out += " = 0;\n";
-                //} else {
-                    //out += " = VL_RAND_RESET_";
-                    //out += dtypep->charIQWN();
-                    //out += "(" + cvtToStr(dtypep->widthMin()) + ");\n";
-                //}
-                //return out;
-            //}
-        //} else {
-            //v3fatalSrc("Unknown node type in reset generator: " << varp->prettyTypeName());
-        //}
-        //return "";
-    //}
+        if (varp->isIO() && m_modp->isTop() && optSystemC()) {
+            // System C top I/O doesn't need loading, as the lower level subinst code does it.}
+        } else if (varp->isParam()) {
+            UASSERT_OBJ(varp->valuep(), varp, "No init for a param?");
+            // If a simple CONST value we initialize it using an enum
+            // If an ARRAYINIT we initialize it using an initial block similar to a signal
+            // puts("// parameter "+varp->nameProtect()+" = "+varp->valuep()->name()+"\n");
+        } else if (AstInitArray* initarp = VN_CAST(varp->valuep(), InitArray)) {
+            if (AstUnpackArrayDType* adtypep = VN_CAST(dtypep, UnpackArrayDType)) {
+                if (initarp->defaultp()) {
+                    puts("for (int __Vi=0; __Vi<" + cvtToStr(adtypep->elementsConst()));
+                    puts("; ++__Vi) {\n");
+                    emitSetVarConstant(signals + "[i * "
+                                           + cvtToStr(adtypep->declRange().elements()) + " + "
+                                           + varNameProtected + " + __Vi]",
+                                       VN_CAST(initarp->defaultp(), Const));
+                    puts("}\n");
+                }
+                const AstInitArray::KeyItemMap& mapr = initarp->map();
+                for (const auto& itr : mapr) {
+                    AstNode* valuep = itr.second->valuep();
+                    emitSetVarConstant(signals + "[i * "
+                                           + cvtToStr(adtypep->declRange().elements()) + " + "
+                                           + varNameProtected + " + " + cvtToStr(itr.first) + "]",
+                                       VN_CAST(valuep, Const));
+                }
+            } else {
+                varp->v3fatalSrc("InitArray under non-arrayed var");
+            }
+        } else {
+            puts(emitVarResetRecurse(varp, varNameProtected, dtypep, 0, ""));
+        }
+    }
+    // TODO : need to modify
+    string emitVarResetRecurse(const AstVar* varp, const string& varNameProtected,
+                               AstNodeDType* dtypep, int depth, const string& suffix) {
+        dtypep = dtypep->skipRefp();
+        AstBasicDType* basicp = dtypep->basicp();
+        string signals;
+        if (dtypep->widthMin() <= 8) {
+            signals = "_csignals";
+        } else if (dtypep->widthMin() <= 16) {
+            signals = "_ssignals";
+        } else if (dtypep->isQuad()) {
+            signals = "_qsignals";
+        } else {
+            // IData
+            signals = "_isignals";
+        }
+        // Returns string to do resetting, empty to do nothing (which caller should handle)
+        if (AstAssocArrayDType* adtypep = VN_CAST(dtypep, AssocArrayDType)) {
+            // Access std::array as C array
+            string cvtarray = (adtypep->subDTypep()->isWide() ? ".data()" : "");
+            return emitVarResetRecurse(varp, varNameProtected, adtypep->subDTypep(), depth + 1,
+                                       suffix + ".atDefault()" + cvtarray);
+        } else if (VN_IS(dtypep, ClassRefDType)) {
+            return "";  // Constructor does it
+        } else if (AstDynArrayDType* adtypep = VN_CAST(dtypep, DynArrayDType)) {
+            // Access std::array as C array
+            string cvtarray = (adtypep->subDTypep()->isWide() ? ".data()" : "");
+            return emitVarResetRecurse(varp, varNameProtected, adtypep->subDTypep(), depth + 1,
+                                       suffix + ".atDefault()" + cvtarray);
+        } else if (AstQueueDType* adtypep = VN_CAST(dtypep, QueueDType)) {
+            // Access std::array as C array
+            string cvtarray = (adtypep->subDTypep()->isWide() ? ".data()" : "");
+            return emitVarResetRecurse(varp, varNameProtected, adtypep->subDTypep(), depth + 1,
+                                       suffix + ".atDefault()" + cvtarray);
+        } else if (AstUnpackArrayDType* adtypep = VN_CAST(dtypep, UnpackArrayDType)) {
+            UASSERT_OBJ(adtypep->hi() >= adtypep->lo(), varp,
+                        "Should have swapped msb & lsb earlier.");
+            string ivar = string("__Vi") + cvtToStr(depth);
+            string pre = ("for (int " + ivar + "=" + cvtToStr(0) + "; " + ivar + "<"
+                          + cvtToStr(adtypep->elementsConst()) + "; ++" + ivar + ") {\n");
+            if (dtypep->isWide() && (varp->valuep() == nullptr)) {
+                ivar += " * " + cvtToStr(varp->widthWords());
+            }
+            string below = emitVarResetRecurse(varp, varNameProtected, adtypep->subDTypep(),
+                                               depth + 1, suffix + ivar);
+            string post = "}\n";
+            return below.empty() ? "" : pre + below + post;
+        } else if (basicp && basicp->keyword() == AstBasicDTypeKwd::STRING) {
+            // String's constructor deals with it
+            return "";
+        } else if (basicp) {
+            bool zeroit
+                = (varp->attrFileDescr()  // Zero so we don't core dump if never $fopen
+                   || (basicp && basicp->isZeroInit())
+                   || (v3Global.opt.underlineZero() && !varp->name().empty()
+                       && varp->name()[0] == '_')
+                   || (v3Global.opt.xInitial() == "fast" || v3Global.opt.xInitial() == "0"));
+            splitSizeInc(1);
+            if (dtypep->isWide()) {  // Handle unpacked; not basicp->isWide
+                string out;
+                if (varp->valuep()) {
+                    AstConst* const constp = VN_CAST(varp->valuep(), Const);
+                    if (!constp) varp->v3fatalSrc("non-const initializer for variable");
+                    for (int w = 0; w < varp->widthWords(); ++w) {
+                        if (suffix.empty()) {
+                            out += signals + "[i * " + cvtToStr(varp->widthWords()) + " + "
+                                   + varNameProtected + " + " + cvtToStr(w) + "] = ";
+                        } else {
+                            out += signals + "[i * " + cvtToStr(varp->widthWords()) + " + "
+                                   + varNameProtected + " + " + suffix + " + " + cvtToStr(w)
+                                   + "] = ";
+                        }
+                        out += cvtToStr(constp->num().edataWord(w)) + "U;\n";
+                    }
+                } else {
+                    out += zeroit ? "VL_ZERO_RESET_W(" : "VL_RAND_RESET_W(";
+                    out += cvtToStr(dtypep->widthMin());
+                    out += ", " + signals + " + i * " + cvtToStr(dtypep->widthWords()) + " + "
+                           + varNameProtected;
+                    if (!suffix.empty()) { out += " + " + suffix; }
+                    out += ");\n";
+                }
+                return out;
+            } else {
+                string out;
+                if (AstUnpackArrayDType* adtypep = VN_CAST(varp->dtypep(), UnpackArrayDType)) {
+                    out = signals + "[i * " + cvtToStr(adtypep->elementsConst()) + " + "
+                          + varNameProtected;
+                } else if (varp->isWide()) {
+                    out = signals + "[i * " + cvtToStr(varp->widthWords()) + " + "
+                          + varNameProtected;
+                } else {
+                    out = signals + "[i + " + varNameProtected;
+                }
+                (suffix.empty()) ? out += "]" : out += " + " + suffix + "]";
+                // If --x-initial-edge is set, we want to force an initial
+                // edge on uninitialized clocks (from 'X' to whatever the
+                // first value is). Since the class is instantiated before
+                // initial blocks are evaluated, this should not clash
+                // with any initial block settings.
+                if (zeroit || (v3Global.opt.xInitialEdge() && varp->isUsedClock())) {
+                    out += " = 0;\n";
+                } else {
+                    out += " = VL_RAND_RESET_";
+                    out += dtypep->charIQWN();
+                    out += "(" + cvtToStr(dtypep->widthMin()) + ");\n";
+                }
+                return out;
+            }
+        } else {
+            v3fatalSrc("Unknown node type in reset generator: " << varp->prettyTypeName());
+        }
+        return "";
+    }
 
     void emitCellCtors(AstNodeModule* modp);
     void emitSensitives();
@@ -3581,7 +3582,7 @@ void EmitCImp::emitInt(AstNodeModule* modp) {
     } else {
         puts("VL_MODULE(" + prefixNameProtect(modp) + ") {\n");
         // RTLflow
-        if (modp->isTop()) { puts("friend class RTLflow;\n"); }
+        puts("friend class RTLflow;\n");
     }
     ofp()->resetPrivate();
     ofp()->putsPrivate(false);  // public:
@@ -4546,6 +4547,40 @@ public:
     }
 };
 
+class getScopes final : public AstNVisitor {
+
+  std::vector<AstScope*> m_scps;
+
+  virtual void visit(AstScope* nodep) override {
+      m_scps.push_back(nodep);
+      iterateChildren(nodep);
+  }
+
+  virtual void visit(AstNode* nodep) override { iterateChildren(nodep); }
+
+  void sortScps() {
+      std::sort(m_scps.begin(), m_scps.end(), [](AstScope* lhs, AstScope* rhs) {
+          if (lhs->modp()->level() > rhs->modp()->level()) {
+              return true;
+          } else if (lhs->modp()->level() == rhs->modp()->level()) {
+              return (lhs->modp()->name() > rhs->modp()->name());
+          } else {
+              return false;
+          }
+      });
+  }
+
+  public:
+
+    getScopes() {
+      iterate(v3Global.rootp());
+      sortScps();
+    }
+
+    std::vector<AstScope*> scps() { return m_scps; }
+
+};
+
 class cudaMemAssign final : public AstNVisitor {
 
     AstModule* m_modp;
@@ -5256,6 +5291,7 @@ public:
 // we need to find topname to replace hard coded VNV_nvdla
 void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_t cuda_imem_size,
                              size_t cuda_qmem_size) {
+
     string fileDir = v3Global.opt.makeDir() + "/";
     string topClassName = v3Global.opt.prefix();
     string filename = fileDir + "rtlflow.h";
@@ -5273,26 +5309,38 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     of.puts("\n#include <taskflow.hpp>\n");
     of.puts("\n#include <rf_heavy.h>\n");
     of.puts("\n#include <cuda/cudaflow.hpp>\n");
+    of.puts("#include \"" + topClassName + "__Syms.h\"\n");
+    for (AstNodeModule* nodep = v3Global.rootp()->modulesp(); nodep;
+         nodep = VN_CAST(nodep->nextp(), NodeModule)) {
+        string name;
+        // Based on prefixNameProtect
+        // TODO: move to other place
+        if (nodep->isTop()) {
+            name = v3Global.opt.prefix();
+        } else {
+            name = v3Global.opt.modPrefix() + "_" + nodep->name();
+        }
+        of.puts("#include \"" + name + ".h\"\n");
+    }
 
     of.puts("// begin of namespace RF =====================================\n");
     of.puts("namespace RF {\n");
-    // of.puts("#include \""+ topClassName + ".h\"\n");
-    of.puts("class " + topClassName + "__Syms;\n");
-    of.puts("class " + topClassName + ";\n");
+    
     of.puts("class RTLflow {\n\n");
     of.puts("friend class " + topClassName + ";\n");
     of.putsPrivate(true);
     of.puts("tf::Taskflow _taskflow;\n");
     of.puts("tf::cudaFlow _cudaflow;\n");
-    of.puts("tf::Executor _executor{8};\n");
+    of.puts("tf::Executor _executor{1};\n");
     of.puts("size_t cuda_cmem_size{" + cvtToStr(cuda_cmem_size) + "};\n");
     of.puts("size_t cuda_smem_size{" + cvtToStr(cuda_smem_size) + "};\n");
     of.puts("size_t cuda_imem_size{" + cvtToStr(cuda_imem_size) + "};\n");
     of.puts("size_t cuda_qmem_size{" + cvtToStr(cuda_qmem_size) + "};\n");
-    of.puts("size_t THREADS;\n");
     of.puts("size_t ast_size{" + cvtToStr(counter.total_count) + "};\n");
     of.puts("int loop{0};\n");
     of.puts("bool init{false};\n");
+    of.puts("void _randomize();\n");
+    of.puts("void _ctor_var_reset(" + topClassName + "__Syms* VlSymsp);\n");
 
     of.putsPrivate(false);
     of.puts("CData* _csignals{nullptr};\n");
@@ -5303,10 +5351,11 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     of.puts(topClassName + "* _dut{nullptr};\n");
     of.puts("bool*  done{nullptr};\n");
     // of.puts("IData* done{nullptr};\n");
-    of.puts("RTLflow(" + topClassName + "* dut);\n");
+    of.puts("RTLflow();\n");
     of.puts("~RTLflow();\n");
-    of.puts("void initialize();\n");
+    of.puts("void initialize(" + topClassName + "* dut);\n");
     of.puts("void run();\n");
+    of.puts("tf::Taskflow& taskflow();\n");
     of.puts("CData* get(CDataLoc cdl, size_t idx);\n");
     of.puts("SData* get(SDataLoc sdl, size_t idx);\n");
     of.puts("QData* get(QDataLoc qdl, size_t idx);\n");
@@ -5317,6 +5366,7 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     of.puts("#endif  //\n");
 }
 void V3EmitC::emitRTLflowImp() {
+
     string fileDir = v3Global.opt.makeDir() + "/";
     string topClassName = v3Global.opt.prefix();
     string filename = fileDir + "rtlflow.cu";
@@ -5332,7 +5382,8 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("\n#include <cuda/algorithm/reduce.hpp>\n");
     of.puts("\n#include \"rtlflow.h\"\n\n");
     of.puts("\n#include \"" + topClassName + ".h\"\n\n");
-    of.puts("#include <assert.h>\n\n");
+    of.puts("\n#include <curand.h>\n");
+    of.puts("\n#include <assert.h>\n\n");
     of.puts("// begin of namespace RF =====================================\n");
     of.puts("namespace RF {\n");
     of.puts("inline\n");
@@ -5347,7 +5398,7 @@ void V3EmitC::emitRTLflowImp() {
             + "__Syms* __restrict vlSymsp, CData* _csignals, SData* _ssignals, IData* _isignals, "
               "QData* _qsignals);\n\n");
 
-    of.puts("RTLflow::RTLflow(" + topClassName + "* dut): _dut{dut} {\n");
+    of.puts("RTLflow::RTLflow() {\n");
     of.puts("checkCuda(cudaMallocManaged(&_csignals, THREADS * cuda_cmem_size * "
             "sizeof(CData)));\n");
     of.puts("checkCuda(cudaMallocManaged(&_ssignals, THREADS * cuda_smem_size * "
@@ -5371,7 +5422,7 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("checkCuda(cudaFree(change));\n");
     of.puts("checkCuda(cudaFree(done));\n");
     // of.puts("checkCuda(cudaFree(done));\n");
-    of.puts("}\n");
+    of.puts("}\n\n");
 
     of.puts("// idx: index of testbenches\n");
     of.puts("CData* RTLflow::get(CDataLoc cdl, size_t idx) {\n");
@@ -5385,13 +5436,71 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("}\n");
     of.puts("IData* RTLflow::get(IDataLoc idl, size_t idx) {\n");
     of.puts("return _isignals + idx * idl.size + idl.memloc;\n");
-    of.puts("}\n");
+    of.puts("}\n\n");
+    of.puts("void RTLflow::_randomize() {\n");
+    of.puts("curandGenerator_t generator;\n");
+    of.puts("curandCreateGenerator(&generator,CURAND_RNG_PSEUDO_XORWOW);\n");
+    of.puts("curandSetPseudoRandomGeneratorSeed(generator,(int)time(NULL));\n");
+    of.puts("curandGenerate(generator, (unsigned int*)_csignals, THREADS * cuda_cmem_size / 4);\n");
+    of.puts("curandGenerate(generator, (unsigned int*)_ssignals, THREADS * cuda_smem_size / 2);\n");
+    of.puts("curandGenerate(generator, (unsigned int*)_isignals, THREADS * cuda_imem_size);\n");
+    of.puts("curandGenerate(generator, (unsigned int*)_qsignals, THREADS * cuda_qmem_size * 2);\n");
+    of.puts("}\n\n");
 
-    of.puts("void RTLflow::run() { _executor.run(_taskflow).wait(); }\n");
+    of.puts("void RTLflow::run() { _executor.run(_taskflow).wait(); }\n\n");
+    of.puts("tf::Taskflow& RTLflow::taskflow() { return _taskflow; }\n\n");
 
-    of.puts("void RTLflow::initialize() {\n");
-    of.puts("//TODO: is VlSymsp used?\n");
-    of.puts(topClassName + "__Syms* VlSymsp = _dut-> __VlSymsp;\n");
+    // ctor reset
+    {
+      getScopes getscps;
+      struct equalM {
+          bool operator()(const AstModule* lhs, const AstModule* rhs) const { return (lhs == rhs); }
+      };
+
+      struct hashM {
+          size_t operator()(const AstModule* mod) const { return ((size_t)mod) >> 3; }
+      };
+
+      std::unordered_map<AstModule*, int, hashM, equalM> modMap;
+      of.puts("void RTLflow::_ctor_var_reset(" + topClassName + "__Syms* VlSymsp) {\n");
+      of.puts("size_t offsetc{0};\n");
+      of.puts("size_t offsets{0};\n");
+      of.puts("size_t offseti{0};\n");
+      of.puts("size_t offsetq{0};\n");
+      for(auto&& scp: getscps.scps()) {
+        AstModule* modp = VN_CAST(scp->modp(), Module);
+        auto search = modMap.find(modp);
+        if (search != modMap.end()) {
+          (search->second)++;
+          of.puts("offsetc = " + cvtToStr(search->second) + " * THREADS * " + cvtToStr(modp->cmem()) + ";\n");
+          of.puts("offsets = " + cvtToStr(search->second) + " * THREADS * " + cvtToStr(modp->smem()) + ";\n");
+          of.puts("offseti = " + cvtToStr(search->second) + " * THREADS * " + cvtToStr(modp->imem()) + ";\n");
+          of.puts("offsetq = " + cvtToStr(search->second) + " * THREADS * " + cvtToStr(modp->qmem()) + ";\n");
+        } else {
+          of.puts("offsetc = 0;\n");
+          of.puts("offsets = 0;\n");
+          of.puts("offseti = 0;\n");
+          of.puts("offsetq = 0;\n");
+          modMap.insert({modp, 0});
+        }
+
+        std::string name("VlSymsp->" + scp->nameDotless());
+
+        if(modp->isTop()) {
+          name += "p";
+          of.puts(name + "->_ctor_var_reset(");
+        }
+        else {
+          of.puts(name + "._ctor_var_reset(");
+        }
+        of.puts("_csignals + offsetc, _ssignals + offsets, _isignals + offseti, _qsignals + offsetq);\n");
+      }
+      of.puts("}\n\n");
+    }
+
+    of.puts("void RTLflow::initialize(" + topClassName + "* dut) {\n");
+    of.puts(topClassName + "__Syms* VlSymsp = dut-> __VlSymsp;\n");
+    of.puts(" _ctor_var_reset(VlSymsp);\n");
     // of.puts(topClassName + "__Syms* __restrict vlSymsp = _mdoule->__VlSymsp;\n");
 
     AstExecGraph* execGraphp = v3Global.rootp()->execGraphp();
@@ -5400,8 +5509,8 @@ void V3EmitC::emitRTLflowImp() {
 
     // V3Graph does not have size() function
     // I need to caculate graph size myself
-    of.puts("size_t num_threads = (THREADS < 128) ? THREADS : 128;\n");
-    of.puts("size_t num_blocks = (num_threads < 128) ? 1 : THREADS / num_threads;\n");
+    of.puts("const size_t num_threads = (THREADS < 128) ? THREADS : 128;\n");
+    of.puts("const size_t num_blocks = (num_threads < 128) ? 1 : THREADS / num_threads;\n");
     of.puts(
         "auto change_cut = _cudaflow.kernel(dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0, "
         "_change_request, VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");

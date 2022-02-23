@@ -75,10 +75,9 @@ private:
                             + EmitCBaseVisitor::symClassVar() + ", bool first");
             preventUnusedStmt = "if (false && self && vlSymsp && first) {}";
         } else {  // Module
-            funcp->argTypes(EmitCBaseVisitor::prefixNameProtect(m_modp)
-                            + "* self, CData* _csignals, SData* _ssignals, IData* _isignals, "
-                              "QData* _qsignals");
-            preventUnusedStmt = "if (false && self) {}";
+            funcp->argTypes("CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
+            //preventUnusedStmt = "if (false && self) {}";
+            preventUnusedStmt = "if (false) {}";
         }
         preventUnusedStmt += "  // Prevent unused\n";
         funcp->addStmtsp(new AstCStmt(m_modp->fileline(), preventUnusedStmt));
