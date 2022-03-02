@@ -10,9 +10,9 @@
 ######################################################################
 
 PERL = /usr/bin/perl
-PYTHON3 = /home/dian-lun/miniconda3/bin/python3
+PYTHON3 = /usr/bin/python3
 NVCC = nvcc 
-LINK = $(NVCC) -lpthread -arch=sm_75 -lgomp
+LINK = $(NVCC) -arch=sm_75 -lpthread  -lgomp -lcurand
 
 RTLFLOW_FLAGS = -std=c++17 -arch=sm_75 --extended-lambda -I $(VERILATOR_ROOT)/include/taskflow -Xcompiler -fopenmp
 

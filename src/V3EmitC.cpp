@@ -5527,6 +5527,7 @@ void V3EmitC::emitRTLflowImp() {
     // I need to caculate graph size myself
     of.puts("const size_t num_threads = (THREADS < 128) ? THREADS : 128;\n");
     of.puts("const size_t num_blocks = (num_threads < 128) ? 1 : THREADS / num_threads;\n");
+    of.puts("auto reset_cut = _cudaflow.memset(change, 1, sizeof(IData) * THREADS);\n");
     of.puts(
         "auto change_cut = _cudaflow.kernel(dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0, "
         "_change_request, VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
@@ -5561,6 +5562,9 @@ void V3EmitC::emitRTLflowImp() {
 
         if (mtp->outBeginp() == nullptr) {
             of.puts("id_" + cvtToStr(mtp->id()) + "_cut.precede(last_assign_cut);\n");
+        }
+        if (mtp->inBeginp() == nullptr) {
+          of.puts("reset_cut.precede(id_" + cvtToStr(mtp->id()) + "_cut);\n");
         }
     }
 
@@ -5617,7 +5621,7 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("});\n");
     of.puts("auto end_t = _taskflow.emplace([=](){\n");
     of.puts("loop = 0;\n");
-    of.puts("checkCuda(cudaMemset(change, 1, sizeof(IData) * THREADS));\n");
+    //of.puts("checkCuda(cudaMemset(change, 1, sizeof(IData) * THREADS));\n");
     of.puts("});\n\n");
     of.puts("auto detect_t = _taskflow.emplace([=](){\n");
     of.puts("if(++loop > 100) {\n");
