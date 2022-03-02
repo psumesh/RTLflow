@@ -21,7 +21,7 @@
 #ifndef VERILATOR_VERILATED_VCD_C_H_
 #define VERILATOR_VERILATED_VCD_C_H_
 
-#include "verilated.h"
+#include "rf_verilated.h"
 #include "verilated_trace.h"
 
 #include <map>

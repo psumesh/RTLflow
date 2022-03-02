@@ -2552,11 +2552,6 @@ class AstModule final : public AstNodeModule {
     // A module declaration
 private:
     bool m_isProgram;  // Module represents a program
-    size_t m_cmem;
-    size_t m_smem;
-    size_t m_imem;
-    size_t m_qmem;
-    bool m_isCount{false};
 
 public:
     AstModule(FileLine* fl, const string& name, bool program = false)
@@ -2566,16 +2561,6 @@ public:
     virtual string verilogKwd() const override { return m_isProgram ? "program" : "module"; }
     virtual bool timescaleMatters() const override { return true; }
 
-    void cmem(size_t cmem) { m_cmem = cmem; }
-    void smem(size_t smem) { m_smem = smem; }
-    void imem(size_t imem) { m_imem = imem; }
-    void qmem(size_t qmem) { m_qmem = qmem; }
-    void isCount(bool count) { m_isCount = count; }
-    size_t cmem() const { return m_cmem; }
-    size_t smem() const { return m_smem; }
-    size_t imem() const { return m_imem; }
-    size_t qmem() const { return m_qmem; }
-    bool isCount() const { return m_isCount; }
 };
 
 class AstNotFoundModule final : public AstNodeModule {

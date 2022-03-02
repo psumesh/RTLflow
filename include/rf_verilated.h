@@ -989,17 +989,18 @@ extern void VL_FCLOSE_I(IData fdi);
 extern IData VL_FREAD_I(int width, int array_lsb, int array_size, void* memp, IData fpi,
                         IData start, IData count);
 
-// TODO: we currently ignore $display
-__device__ __host__ inline void VL_WRITEF(const char* formatp, ...) VL_MT_SAFE {
-    // static VL_THREAD_LOCAL std::string t_output;  // static only for speed
-    // t_output = "";
-    // va_list ap;
-    // va_start(ap, formatp);
-    //_vl_vsformat(t_output, formatp, ap);
-    // va_end(ap);
+//// TODO: we currently ignore $display
+//__device__ __host__ inline void VL_WRITEF(const char* formatp, ...) VL_MT_SAFE {
+    //// static VL_THREAD_LOCAL std::string t_output;  // static only for speed
+    //// t_output = "";
+    //// va_list ap;
+    //// va_start(ap, formatp);
+    ////_vl_vsformat(t_output, formatp, ap);
+    //// va_end(ap);
 
-    // VL_PRINTF_MT("%s", t_output.c_str());
-}
+    //// VL_PRINTF_MT("%s", t_output.c_str());
+//}
+extern void VL_WRITEF(const char* formatp, ...);
 extern void VL_FWRITEF(IData fpi, const char* formatp, ...);
 
 extern IData VL_FSCANF_IX(IData fpi, const char* formatp, ...);
