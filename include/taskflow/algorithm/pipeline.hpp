@@ -461,12 +461,12 @@ Pipeline<Ps...>::Pipeline(size_t num_lines, std::tuple<Ps...>&& ps) :
   _build();
 }
   
-// Function: _get_meta
-template <typename... Ps>
-template <size_t... I>
-auto Pipeline<Ps...>::_gen_meta(std::tuple<Ps...>&& ps, std::index_sequence<I...>) {
-  return std::array{PipeMeta{std::get<I>(ps).type()}...};
-}
+//// Function: _get_meta
+//template <typename... Ps>
+//template <size_t... I>
+//auto Pipeline<Ps...>::_gen_meta(std::tuple<Ps...>&& ps, std::index_sequence<I...>) {
+  //return std::array{PipeMeta{std::get<I>(ps).type()}...};
+//}
 
 // Function: num_lines
 template <typename... Ps>
