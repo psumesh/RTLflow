@@ -32,7 +32,7 @@ By default, we set nvcc flag ```--arch=sm_80``` to achieve the best performance 
 ```bash
 ~/RTLflow/include/verilated.mk.in
 ```
-to modify ```$RTLFLOW_FLAGS```.
+to modify ```$RTLFLOW_FLAGS``` and ```make``` RTLflow again.
 
 
 Open License
