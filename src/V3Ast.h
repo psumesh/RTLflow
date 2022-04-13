@@ -1784,6 +1784,7 @@ public:
     // statement is unlikely to be taken
     virtual bool isUnlikely() const { return false; }
     virtual int instrCount() const { return 0; }
+    virtual int cudaInstrCount() const { return 1; }
     virtual bool same(const AstNode*) const { return true; }
     // Iff has a data type; dtype() must be non null
     virtual bool hasDType() const { return false; }

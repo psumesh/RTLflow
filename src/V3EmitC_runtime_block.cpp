@@ -1,4 +1,3 @@
-
 // -*- mode: C++; c-file-style: "cc-mode" -*-
 //*************************************************************************
 // DESCRIPTION: Verilator: Emit C++ for tree
@@ -1229,12 +1228,12 @@ public:
             }
             puts(" + ");
 
-            //if (m_isGpu) {
-            puts("BATCH_SIZE * " + cvtToStr(nodep->memLoc()));
-            //}
-            //else {
-              //puts("BATCH_SIZE_h * " + cvtToStr(nodep->memLoc()));
-            //}
+            if (m_isGpu) {
+              puts("BATCH_SIZE * " + cvtToStr(nodep->memLoc()));
+            }
+            else {
+              puts("BATCH_SIZE_h * " + cvtToStr(nodep->memLoc()));
+            }
 
             if (!m_isPointer && !dtypep->isWide() && adtypep == nullptr) { puts("]"); }
         } else {
@@ -1485,14 +1484,10 @@ class EmitCImp final : public EmitCStmts {
     bool m_slow = false;  // Creating __Slow file
     bool m_fast = false;  // Creating non __Slow file (or both)
 
-    bool m_ns = false;
-
     //---------------------------------------
     // METHODS
 
     void count_cuda_mem(AstNodeModule* modp);
-    void emitNS();
-    void emitENS();
 
     void doubleOrDetect(AstChangeDet* changep, bool& gotOne) {
         // cppcheck-suppress variableScope
@@ -1646,7 +1641,6 @@ class EmitCImp final : public EmitCStmts {
 
     virtual void visit(AstMTaskBody* nodep) override {
         maybeSplit();
-        //split();
         splitSizeInc(10);
 
         const ExecMTask* const mtp = nodep->execMTaskp();
@@ -1738,8 +1732,7 @@ class EmitCImp final : public EmitCStmts {
 
         if (!nodep->device() && (nodep != v3Global.rootp()->initp())) {
             puts("#pragma omp parallel for\n");
-            //puts("for(size_t i = 0; i < BATCH_SIZE_h; ++i) {\n");
-            puts("for(size_t i = 0; i < BATCH_SIZE; ++i) {\n");
+            puts("for(size_t i = 0; i < BATCH_SIZE_h; ++i) {\n");
         }
 
         iterateAndNextNull(nodep->initsp());
@@ -1751,8 +1744,7 @@ class EmitCImp final : public EmitCStmts {
 
         if (!nodep->device() && (nodep == v3Global.rootp()->initp())) {
             puts("#pragma omp parallel for\n");
-            //puts("for(size_t i = 0; i < BATCH_SIZE_h; ++i) {\n");
-            puts("for(size_t i = 0; i < BATCH_SIZE; ++i) {\n");
+            puts("for(size_t i = 0; i < BATCH_SIZE_h; ++i) {\n");
         }
 
         if (nodep->finalsp()) putsDecoration("// Final\n");
@@ -1966,8 +1958,7 @@ class EmitCImp final : public EmitCStmts {
         //
         // std::cerr << varRefp->hiernameProtect() << "   " << varRefp->nameProtect() << "\n";
         const string varNameProtected
-            = cvtToStr(varRefp->memLoc()) + " * BATCH_SIZE";
-            //= cvtToStr(varRefp->memLoc()) + " * BATCH_SIZE_h";
+            = cvtToStr(varRefp->memLoc()) + " * BATCH_SIZE_h";
             //= cell_counter + " + " + cvtToStr(varRefp->memLoc()) + " * THREADS";
 
         if (varp->isIO() && m_modp->isTop() && optSystemC()) {
@@ -2139,7 +2130,6 @@ class EmitCImp final : public EmitCStmts {
     void emitIntTop(AstNodeModule* modp);
     void emitInt(AstNodeModule* modp);
     void maybeSplit();
-    void split();
 
 public:
     EmitCImp() = default;
@@ -3147,7 +3137,7 @@ void EmitCImp::emitSettleLoop(const std::string& eval_call, bool initial) {
     // puts("Verilated::debug(1);\n");
     puts(
         protect("_change_request")
-        + "<<<num_blocks, num_threads, 0>>>(vlSymsp, _rtlflow.change);\n");
+        + "<<<dim3(num_blocks, 1, 1), dim3(num_threads, 1, 1), 0>>>(vlSymsp, _rtlflow.change);\n");
     // puts("Verilated::debug(__Vsaved_debug);\n");
     puts("VL_FATAL_MT(");
     putsQuoted(protect(m_modp->fileline()->filename()));
@@ -3528,11 +3518,12 @@ void EmitCImp::emitIntTop(AstNodeModule* modp) {
     // puts("#include \"" + topClassName() + "__Dpi.h\"\n");
     //}
     // puts("#define THREADS 2ULL");
-    emitNS();
 }
 
 void EmitCImp::emitInt(AstNodeModule* modp) {
 
+    puts("// begin of namespace RF =====================================\n");
+    puts("namespace RF {\n");
         // RTLflow
         if (modp->isTop()) { puts("class RTLflow;\n"); }
         // Declare foreign instances up front to make C++ happy
@@ -3814,7 +3805,7 @@ void EmitCImp::emitInt(AstNodeModule* modp) {
              + prefixNameProtect(modp) + "& rhs) {\n"  //
              + "Verilated::quiesce(); rhs." + protect("__Vdeserialize") + "(os); return os; }\n");
     }
-
+    puts("} // end of namespace RF ==================================== \n");
 }
 
 //----------------------------------------------------------------------
@@ -3833,35 +3824,16 @@ void EmitCImp::emitImpTop() {
     emitModCUse(m_fileModp, VUseType::IMP_FWD_CLASS);
 
     emitTextSection(AstType::atScImpHdr);
-
-    emitNS();
 }
-
-void EmitCImp::emitNS() {
-  if(!m_ns) {
-    puts("// begin of namespace RF =====================================\n");
-    puts("namespace RF {\n");
-
-    puts("\n//==========\n");
-
-    m_ns = true;
-  }
-}
-
-void EmitCImp::emitENS() {
-  if(m_ns) {
-    puts("} // end of namespace RF ========================================\n");
-    m_ns = false;
-  }
-}
-
 
 void EmitCImp::emitImp(AstNodeModule* modp) {
 
     // RTLflow
     //if (modp->isTop()) { puts("#include \"rtlflow.h\"\n"); }
-    //
+    puts("// begin of namespace RF =====================================\n");
+    puts("namespace RF {\n");
 
+    puts("\n//==========\n");
     if (m_slow) {
         //puts("size_t " + prefixNameProtect(modp) + "::reset_cell_counter = 0;");
         string section;
@@ -3885,27 +3857,12 @@ void EmitCImp::emitImp(AstNodeModule* modp) {
     for (AstNode* nodep = modp->stmtsp(); nodep; nodep = nodep->nextp()) {
         if (AstCFunc* funcp = VN_CAST(nodep, CFunc)) { mainDoFunc(funcp); }
     }
-
 }
 
 //######################################################################
 
 void EmitCImp::maybeSplit() {
     if (!splitNeeded()) return;
-
-    emitENS();
-
-    // Splitting file, so using parallel build.
-    v3Global.useParallelBuild(true);
-    // Close old file
-    VL_DO_CLEAR(delete m_ofp, m_ofp = nullptr);
-    // Open a new file
-    m_ofp = newOutCFile(!m_fast, true /*source*/, splitFilenumInc());
-    emitImpTop();
-}
-
-void EmitCImp::split() {
-    emitENS();
 
     // Splitting file, so using parallel build.
     v3Global.useParallelBuild(true);
@@ -3933,8 +3890,6 @@ void EmitCImp::mainInt(AstNodeModule* modp) {
         emitInt(packagep->classp());
         m_modp = modp;
     }
-    emitENS();
-
     ofp()->putsEndGuard();
     VL_DO_CLEAR(delete m_ofp, m_ofp = nullptr);
 }
@@ -3979,7 +3934,7 @@ void EmitCImp::mainImp(AstNodeModule* modp, bool slow) {
             //}
         }
     }
-    emitENS();
+    puts("} // end of namespace RF ==================================== \n");
     VL_DO_CLEAR(delete m_ofp, m_ofp = nullptr);
 }
 
@@ -5375,7 +5330,7 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
 
     of.puts("// begin of namespace RF =====================================\n");
     of.puts("namespace RF {\n");
-
+    
     of.puts("class RTLflow {\n\n");
     of.puts("friend class " + topClassName + ";\n");
     of.putsPrivate(true);
@@ -5398,6 +5353,8 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     of.puts("SData* _ssignals{nullptr};\n");
     of.puts("IData* _isignals{nullptr};\n");
     of.puts("QData* _qsignals{nullptr};\n");
+    of.puts("std::vector<int> block_dims;\n");
+    of.puts("std::vector<tf::cudaTask> cutasks;\n");
     of.puts("IData* change{nullptr};\n");
     of.puts(topClassName + "* _dut{nullptr};\n");
     of.puts("bool*  done{nullptr};\n");
@@ -5412,11 +5369,10 @@ void V3EmitC::emitRTLflowInt(size_t cuda_cmem_size, size_t cuda_smem_size, size_
     of.puts("SData* get(SDataLoc sdl, size_t idx);\n");
     of.puts("QData* get(QDataLoc qdl, size_t idx);\n");
     of.puts("IData* get(IDataLoc idl, size_t idx);\n");
-    //of.puts("void update(size_t idx);\n");
+    of.puts("void update(size_t idx);\n");
     of.puts("};\n\n");
 
-    of.puts("} // end of namespace RF ========================================\n");
-
+    of.puts("} // end of namespace RF ==================================== \n");
     of.puts("#endif  //\n");
 }
 void V3EmitC::emitRTLflowImp() {
@@ -5457,43 +5413,45 @@ void V3EmitC::emitRTLflowImp() {
               "QData* _qsignals);\n\n");
 
     of.puts("RTLflow::RTLflow(" + topClassName+ "* dut): dut{dut} {\n");
-    of.puts("checkCuda(cudaMallocManaged(&_csignals, BATCH_SIZE * cuda_cmem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_csignals, BATCH_SIZE_h * cuda_cmem_size * "
             "sizeof(CData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_ssignals, BATCH_SIZE * cuda_smem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_ssignals, BATCH_SIZE_h * cuda_smem_size * "
             "sizeof(SData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_qsignals, BATCH_SIZE * cuda_qmem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_qsignals, BATCH_SIZE_h * cuda_qmem_size * "
             "sizeof(QData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_isignals, BATCH_SIZE * cuda_imem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_isignals, BATCH_SIZE_h * cuda_imem_size * "
             "sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&change, BATCH_SIZE * sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&done, BATCH_SIZE * sizeof(bool)));\n");
-    // of.puts("checkCuda(cudaMallocManaged(&done, BATCH_SIZE * sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMemset(change, 1, BATCH_SIZE * sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMemset(done, 0, BATCH_SIZE * sizeof(bool)));\n");
+    of.puts("checkCuda(cudaMallocManaged(&change, BATCH_SIZE_h * sizeof(IData)));\n");
+    of.puts("checkCuda(cudaMallocManaged(&done, BATCH_SIZE_h * sizeof(bool)));\n");
+    // of.puts("checkCuda(cudaMallocManaged(&done, BATCH_SIZE_h * sizeof(IData)));\n");
+    of.puts("checkCuda(cudaMemset(change, 1, BATCH_SIZE_h * sizeof(IData)));\n");
+    of.puts("checkCuda(cudaMemset(done, 0, BATCH_SIZE_h * sizeof(bool)));\n");
     // of.puts("checkCuda(cudaMemset(done, 0, THREADS * sizeof(IData)));\n");
-    //size_t num_partitions{0};
-    //for (const V3GraphVertex* vxp = depGraphp->verticesBeginp(); vxp; vxp = vxp->verticesNextp()) {
-      //++num_partitions;
-    //}
-    //of.puts("block_dims.resize(" + cvtToStr(num_partitions + 3) + ", 128);\n");
+    size_t num_partitions{0};
+    for (const V3GraphVertex* vxp = depGraphp->verticesBeginp(); vxp; vxp = vxp->verticesNextp()) {
+      ++num_partitions;
+    }
+    of.puts("block_dims.resize(" + cvtToStr(num_partitions + 3) + ", 128);\n");
+    of.puts("cutasks.resize(" + cvtToStr(num_partitions + 3) + ");\n");
     of.puts("}\n");
     of.puts("RTLflow::RTLflow(const RTLflow& rtlflow) {\n");
     of.puts("dut = rtlflow.dut;\n");
-    of.puts("checkCuda(cudaMallocManaged(&_csignals, BATCH_SIZE * cuda_cmem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_csignals, BATCH_SIZE_h * cuda_cmem_size * "
             "sizeof(CData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_ssignals, BATCH_SIZE * cuda_smem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_ssignals, BATCH_SIZE_h * cuda_smem_size * "
             "sizeof(SData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_qsignals, BATCH_SIZE * cuda_qmem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_qsignals, BATCH_SIZE_h * cuda_qmem_size * "
             "sizeof(QData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&_isignals, BATCH_SIZE * cuda_imem_size * "
+    of.puts("checkCuda(cudaMallocManaged(&_isignals, BATCH_SIZE_h * cuda_imem_size * "
             "sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&change, BATCH_SIZE * sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMallocManaged(&done, BATCH_SIZE * sizeof(bool)));\n");
-    // of.puts("checkCuda(cudaMallocManaged(&done, BATCH_SIZE * sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMemset(change, 1, BATCH_SIZE * sizeof(IData)));\n");
-    of.puts("checkCuda(cudaMemset(done, 0, BATCH_SIZE * sizeof(bool)));\n");
+    of.puts("checkCuda(cudaMallocManaged(&change, BATCH_SIZE_h * sizeof(IData)));\n");
+    of.puts("checkCuda(cudaMallocManaged(&done, BATCH_SIZE_h * sizeof(bool)));\n");
+    // of.puts("checkCuda(cudaMallocManaged(&done, BATCH_SIZE_h * sizeof(IData)));\n");
+    of.puts("checkCuda(cudaMemset(change, 1, BATCH_SIZE_h * sizeof(IData)));\n");
+    of.puts("checkCuda(cudaMemset(done, 0, BATCH_SIZE_h * sizeof(bool)));\n");
     // of.puts("checkCuda(cudaMemset(done, 0, THREADS * sizeof(IData)));\n");
-    //of.puts("block_dims.resize(" + cvtToStr(num_partitions + 3) + ", 128);\n");
+    of.puts("block_dims.resize(" + cvtToStr(num_partitions + 3) + ", 128);\n");
+    of.puts("cutasks.resize(" + cvtToStr(num_partitions + 3) + ");\n");
     of.puts("}\n");
     of.puts("RTLflow::~RTLflow() {\n");
     of.puts("checkCuda(cudaFree(_csignals));\n");
@@ -5522,10 +5480,10 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("curandGenerator_t generator;\n");
     of.puts("curandCreateGenerator(&generator,CURAND_RNG_PSEUDO_XORWOW);\n");
     of.puts("curandSetPseudoRandomGeneratorSeed(generator,(int)time(NULL));\n");
-    of.puts("curandGenerate(generator, (unsigned int*)_csignals, BATCH_SIZE * cuda_cmem_size / 4);\n");
-    of.puts("curandGenerate(generator, (unsigned int*)_ssignals, BATCH_SIZE * cuda_smem_size / 2);\n");
-    of.puts("curandGenerate(generator, (unsigned int*)_isignals, BATCH_SIZE * cuda_imem_size);\n");
-    of.puts("curandGenerate(generator, (unsigned int*)_qsignals, BATCH_SIZE * cuda_qmem_size * 2);\n");
+    of.puts("curandGenerate(generator, (unsigned int*)_csignals, BATCH_SIZE_h * cuda_cmem_size / 4);\n");
+    of.puts("curandGenerate(generator, (unsigned int*)_ssignals, BATCH_SIZE_h * cuda_smem_size / 2);\n");
+    of.puts("curandGenerate(generator, (unsigned int*)_isignals, BATCH_SIZE_h * cuda_imem_size);\n");
+    of.puts("curandGenerate(generator, (unsigned int*)_qsignals, BATCH_SIZE_h * cuda_qmem_size * 2);\n");
     of.puts("}\n\n");
 
     of.puts("void RTLflow::run() { _executor.run(_taskflow).wait(); }\n\n");
@@ -5553,10 +5511,10 @@ void V3EmitC::emitRTLflowImp() {
         auto search = modMap.find(modp);
         if (search != modMap.end()) {
           (search->second)++;
-          of.puts("offsetc = " + cvtToStr(search->second) + " * BATCH_SIZE * " + cvtToStr(modp->cmem()) + ";\n");
-          of.puts("offsets = " + cvtToStr(search->second) + " * BATCH_SIZE * " + cvtToStr(modp->smem()) + ";\n");
-          of.puts("offseti = " + cvtToStr(search->second) + " * BATCH_SIZE * " + cvtToStr(modp->imem()) + ";\n");
-          of.puts("offsetq = " + cvtToStr(search->second) + " * BATCH_SIZE * " + cvtToStr(modp->qmem()) + ";\n");
+          of.puts("offsetc = " + cvtToStr(search->second) + " * BATCH_SIZE_h * " + cvtToStr(modp->cmem()) + ";\n");
+          of.puts("offsets = " + cvtToStr(search->second) + " * BATCH_SIZE_h * " + cvtToStr(modp->smem()) + ";\n");
+          of.puts("offseti = " + cvtToStr(search->second) + " * BATCH_SIZE_h * " + cvtToStr(modp->imem()) + ";\n");
+          of.puts("offsetq = " + cvtToStr(search->second) + " * BATCH_SIZE_h * " + cvtToStr(modp->qmem()) + ";\n");
         } else {
           of.puts("offsetc = 0;\n");
           of.puts("offsets = 0;\n");
@@ -5579,6 +5537,32 @@ void V3EmitC::emitRTLflowImp() {
       of.puts("}\n\n");
     }
 
+    of.puts("void RTLflow::update(size_t idx) {\n");
+    of.puts(topClassName + "__Syms* VlSymsp = dut-> __VlSymsp;\n");
+    of.puts("switch (idx) {\n");
+    of.puts("case 0:\n");
+    of.puts("_cudaflow.kernel(cutasks[0], dim3(BATCH_SIZE_h / block_dims[0], 1, 1), dim3(block_dims[0], 1, 1), 0, "
+        "_change_request, VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
+    of.puts("break;\n");
+    of.puts("case 1:\n");
+    of.puts(
+        "_cudaflow.kernel(cutasks[1], dim3(BATCH_SIZE_h / block_dims[1], 1, 1), dim3(block_dims[1], 1, 1), "
+        "0, _last_assign, _csignals, _ssignals, _isignals, _qsignals);\n");
+    of.puts("break;\n");
+    for (const V3GraphVertex* vxp = depGraphp->verticesBeginp(); vxp; vxp = vxp->verticesNextp()) {
+        const ExecMTask* mtp = dynamic_cast<const ExecMTask*>(vxp);
+        of.puts("case " + cvtToStr(mtp->id() + 2) + ":\n");
+        of.puts("_cudaflow.kernel(cutasks[" + cvtToStr(mtp->id() + 2) + "], dim3(BATCH_SIZE_h / block_dims[2 + " + cvtToStr(mtp->id()) + "], 1, 1), dim3(block_dims[2 + " + cvtToStr(mtp->id()) + "], 1, 1), 0, "
+                + "__Vmtask__"
+                + cvtToStr(mtp->id())
+                //+ ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change, done);\n");
+                + ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change, done);\n");
+        of.puts("break;\n");
+    }
+    of.puts("}\n");
+    
+    of.puts("}\n");
+
     of.puts("void RTLflow::initialize() {\n");
     of.puts(topClassName + "__Syms* VlSymsp = dut-> __VlSymsp;\n");
     of.puts(" _ctor_var_reset(VlSymsp);\n");
@@ -5586,14 +5570,19 @@ void V3EmitC::emitRTLflowImp() {
 
     // V3Graph does not have size() function
     // I need to caculate graph size myself
-    of.puts("const size_t num_threads = (BATCH_SIZE < 128) ? BATCH_SIZE : 128;\n");
-    of.puts("const size_t num_blocks = (num_threads < 128) ? 1 : BATCH_SIZE / num_threads;\n");
-    of.puts("auto reset_cut = _cudaflow.memset(change, 1, sizeof(IData) * BATCH_SIZE);\n");
+    //of.puts("const size_t num_threads = (THREADS < 128) ? THREADS : 128;\n");
+    //of.puts("const size_t num_blocks = (num_threads < 128) ? 1 : BATCH_SIZE_h / num_threads;\n");
+    of.puts("auto reset_cut = _cudaflow.memset(change, 1, sizeof(IData) * BATCH_SIZE_h);\n");
     of.puts(
-        "auto change_cut = _cudaflow.kernel(num_blocks, num_threads, 0, _change_request, VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
+        "auto change_cut = _cudaflow.kernel( dim3(BATCH_SIZE_h / block_dims[0], 1, 1), dim3(block_dims[0], 1, 1), 0, "
+        "_change_request, VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change);\n");
+    of.puts("cutasks[0] = change_cut;\n");
     of.puts(
-        "auto last_assign_cut = _cudaflow.kernel(num_blocks, num_threads, 0, _last_assign, VlSymsp, _csignals, _ssignals, _isignals, _qsignals);\n");
-    of.puts("auto reduce_cut = _cudaflow.reduce(change, change + BATCH_SIZE, change, [] __device__ (IData a, IData b){ return a | b; });\n");
+        "auto last_assign_cut = _cudaflow.kernel(dim3(BATCH_SIZE_h / block_dims[1], 1, 1), dim3(block_dims[1], 1, 1), "
+        "0, _last_assign, _csignals, _ssignals, _isignals, _qsignals);\n");
+    of.puts("cutasks[1] = last_assign_cut;\n");
+    of.puts("auto reduce_cut = _cudaflow.reduce(change, change + BATCH_SIZE_h, change, [] "
+            "__device__ (IData a, IData b){ return a | b; });\n");
     of.puts("last_assign_cut.precede(change_cut);\n\n");
     of.puts("change_cut.precede(reduce_cut);\n\n");
 
@@ -5601,11 +5590,12 @@ void V3EmitC::emitRTLflowImp() {
     for (const V3GraphVertex* vxp = depGraphp->verticesBeginp(); vxp; vxp = vxp->verticesNextp()) {
         const ExecMTask* mtp = dynamic_cast<const ExecMTask*>(vxp);
         of.puts("auto id_" + cvtToStr(mtp->id())
-                + "_cut = _cudaflow.kernel(num_blocks, num_threads, 0, "
+                + "_cut = _cudaflow.kernel(dim3(BATCH_SIZE_h / block_dims[2 + " + cvtToStr(mtp->id()) + "], 1, 1), dim3(block_dims[2 + " + cvtToStr(mtp->id()) + "], 1, 1), 0, "
                 + "__Vmtask__"
                 + cvtToStr(mtp->id())
                 //+ ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change, done);\n");
                 + ", VlSymsp, _csignals, _ssignals, _isignals, _qsignals, change, done).name(\"task_"+ cvtToStr(mtp->id())+"\");\n");
+      of.puts("cutasks[2 + " + cvtToStr(mtp->id()) + "] = id_" + cvtToStr(mtp->id()) + "_cut;\n");
     }
     // puts("__Vchange = " + protect("_change_request") + "(vlSymsp);\n");
 
@@ -5632,20 +5622,20 @@ void V3EmitC::emitRTLflowImp() {
             + "::_eval_initial(VlSymsp, _csignals, _ssignals, _isignals, _qsignals);\n");
     of.puts("int device;\n");
     of.puts("checkCuda(cudaGetDevice(&device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_csignals, BATCH_SIZE * cuda_cmem_size * "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_csignals, BATCH_SIZE_h * cuda_cmem_size * "
             "sizeof(CData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_ssignals, BATCH_SIZE * cuda_smem_size * "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_ssignals, BATCH_SIZE_h * cuda_smem_size * "
             "sizeof(SData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_isignals, BATCH_SIZE * cuda_imem_size * "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_isignals, BATCH_SIZE_h * cuda_imem_size * "
             "sizeof(IData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(_qsignals, BATCH_SIZE * cuda_qmem_size * "
+    of.puts("checkCuda(cudaMemPrefetchAsync(_qsignals, BATCH_SIZE_h * cuda_qmem_size * "
             "sizeof(QData), "
             "device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(change, BATCH_SIZE * sizeof(IData), device));\n");
-    of.puts("checkCuda(cudaMemPrefetchAsync(done, BATCH_SIZE * sizeof(bool), device));\n");
+    of.puts("checkCuda(cudaMemPrefetchAsync(change, BATCH_SIZE_h * sizeof(IData), device));\n");
+    of.puts("checkCuda(cudaMemPrefetchAsync(done, BATCH_SIZE_h * sizeof(bool), device));\n");
     of.puts("init = true;\n");
     of.puts("return 0;\n");
     of.puts("}\n");
@@ -5656,7 +5646,7 @@ void V3EmitC::emitRTLflowImp() {
 
     of.puts("auto init_detect_t = _taskflow.emplace([=](){\n");
     of.puts("if(++loop > 100) {\n");
-    of.puts("_change_request<<<num_blocks, num_threads, 0>>>(VlSymsp, "
+    of.puts("_change_request<<<dim3(BATCH_SIZE_h / block_dims[0], 1, 1), dim3(block_dims[0], 1, 1), 0>>>(VlSymsp, "
             "_csignals, _ssignals, _isignals, _qsignals, change);\n");
     of.puts("checkCuda(cudaDeviceSynchronize());\n");
     of.puts("VL_FATAL_MT(\"add.v\", 2, \"\",\n");
@@ -5668,7 +5658,7 @@ void V3EmitC::emitRTLflowImp() {
 
     of.puts("auto init_sim_t = _taskflow.emplace([=](){\n");
     of.puts(
-        "_eval_settle<<<num_blocks, num_threads, 0>>>(VlSymsp, _csignals, "
+        "_eval_settle<<<dim3(BATCH_SIZE_h / block_dims[2], 1, 1), dim3(block_dims[2], 1, 1), 0>>>(VlSymsp, _csignals, "
         "_ssignals, _isignals, _qsignals);\n");
     of.puts("checkCuda(cudaDeviceSynchronize());\n");
     of.puts("_cudaflow.offload();\n");
@@ -5683,7 +5673,7 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("});\n\n");
     of.puts("auto detect_t = _taskflow.emplace([=](){\n");
     of.puts("if(++loop > 100) {\n");
-    of.puts("_change_request<<<num_blocks, num_threads, 0>>>(VlSymsp, "
+    of.puts("_change_request<<<dim3(BATCH_SIZE_h / block_dims[0], 1, 1), dim3(block_dims[0], 1, 1), 0>>>(VlSymsp, "
             "_csignals, _ssignals, _isignals, _qsignals, change);\n");
     of.puts("checkCuda(cudaDeviceSynchronize());\n");
     of.puts("VL_FATAL_MT(\"add.v\", 2, \"\",\n");

@@ -3,10 +3,20 @@
 // begin of namespace RF =========================================================================
 namespace RF {
 
-#ifdef GPU_THREADS
+#ifdef BATCH
    //#define THREADS GPU_THREADS
-   constexpr size_t THREADS = GPU_THREADS;
+   constexpr size_t BATCH_SIZE = BATCH;
 #endif
+//extern size_t BATCH_SIZE_h;
+//extern __constant__ size_t BATCH_SIZE;
+
+//inline
+//void set_batch_size(size_t b) {
+  //BATCH_SIZE_h = b;
+  //cudaMemcpyToSymbol(BATCH_SIZE, &BATCH_SIZE_h, sizeof(size_t));
+//}
+
+
 typedef unsigned char CData;
 typedef unsigned short int SData;
 typedef uint32_t IData;

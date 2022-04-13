@@ -184,15 +184,22 @@ private:
                 // Make a new function
                 funcp = new AstCFunc{ofuncp->fileline(), ofuncp->name() + cvtToStr(++funcnum),
                                      m_topScopep->scopep()};
-                funcp->argTypes(EmitCBaseVisitor::symClassVar());
+                if(ofuncp->device()) {
+                  funcp->cudaScope("__device__");
+                  funcp->putDevice();
+                }
+                funcp->argTypes(
+                  EmitCBaseVisitor::symClassVar()
+                  + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
                 funcp->dontCombine(true);
                 funcp->symProlog(true);
                 funcp->isStatic(true);
                 funcp->slow(ofuncp->slow());
                 m_topScopep->scopep()->addActivep(funcp);
+
                 //
                 AstCCall* callp = new AstCCall{funcp->fileline(), funcp};
-                callp->argTypes("vlSymsp");
+                callp->argTypes("vlSymsp, _csignals, _ssignals, _isignals, _qsignals");
                 ofuncp->addStmtsp(callp);
                 func_stmts = 0;
             }
@@ -218,9 +225,10 @@ private:
             funcp->cudaScope("__global__");
             funcp->putDevice();
             funcp->argTypes(
-                "CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
+                EmitCBaseVisitor::symClassVar()
+                + ", CData* _csignals, SData* _ssignals, IData* _isignals, QData* _qsignals");
             funcp->dontCombine(true);
-            // funcp->symProlog(true);
+            funcp->symProlog(true);
             funcp->entryPoint(true);
             m_topScopep->scopep()->addActivep(funcp);
             m_evalFuncp = funcp;

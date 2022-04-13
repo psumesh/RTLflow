@@ -21,7 +21,7 @@
 #include "V3File.h"
 #include "V3GraphAlg.h"
 #include "V3GraphStream.h"
-#include "V3InstrCount.h"
+#include "V3CudaInstrCount.h"
 #include "V3Partition.h"
 #include "V3PartitionGraph.h"
 #include "V3Scoreboard.h"
@@ -453,7 +453,7 @@ public:
         if (mtmvVxp) {  // Else null for test
             m_vertices.push_back(mtmvVxp);
             if (OrderLogicVertex* olvp = mtmvVxp->logicp()) {
-                m_cost += V3InstrCount::count(olvp->nodep(), true);
+                m_cost += V3CudaInstrCount::count(olvp->nodep(), true);
             }
         }
         // Start at 1, so that 0 indicates no mtask ID.
@@ -674,7 +674,7 @@ public:
                     logicp->nodep()->dumpTree(*osp);
                 } else {
                     // Show nodes with hierarchical costs
-                    V3InstrCount::count(logicp->nodep(), false, osp);
+                    V3CudaInstrCount::count(logicp->nodep(), false, osp);
                 }
             }
         }
@@ -2483,7 +2483,7 @@ void V3Partition::finalizeCosts(V3Graph* execMTaskGraphp) {
 
     while (const V3GraphVertex* vxp = ser.nextp()) {
         ExecMTask* mtp = dynamic_cast<ExecMTask*>(const_cast<V3GraphVertex*>(vxp));
-        uint32_t costCount = V3InstrCount::count(mtp->bodyp(), false);
+        uint32_t costCount = V3CudaInstrCount::count(mtp->bodyp(), false);
         mtp->cost(costCount);
         mtp->priority(costCount);
 

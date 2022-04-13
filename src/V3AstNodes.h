@@ -176,6 +176,7 @@ public:
         return num().isCaseEq(sp->num());
     }
     virtual int instrCount() const override { return widthInstrs(); }
+
     bool isEqAllOnes() const { return num().isEqAllOnes(width()); }
     bool isEqAllOnesV() const { return num().isEqAllOnes(widthMinV()); }
     // Parse string and create appropriate type of AstConst.
