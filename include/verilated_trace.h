@@ -24,7 +24,7 @@
 
 // clang-format off
 
-#include "verilated.h"
+#include "rf_verilated.h"
 #include "verilated_trace_defs.h"
 
 #include <string>
