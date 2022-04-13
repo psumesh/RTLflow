@@ -1000,6 +1000,7 @@ extern IData VL_FREAD_I(int width, int array_lsb, int array_size, void* memp, ID
 
     //// VL_PRINTF_MT("%s", t_output.c_str());
 //}
+__host__ __device__
 extern void VL_WRITEF(const char* formatp, ...);
 extern void VL_FWRITEF(IData fpi, const char* formatp, ...);
 

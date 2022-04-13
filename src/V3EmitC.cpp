@@ -1761,7 +1761,7 @@ class EmitCImp final : public EmitCStmts {
 
         if (!m_blkChangeDetVec.empty()) puts("return __req;\n");
 
-        //if (!nodep->device()) { puts("}\n"); }
+        if (!nodep->device()) { puts("}\n"); }
 
         // puts("__Vm_activity = true;\n");
         puts("}\n");
@@ -4465,7 +4465,7 @@ class cudaCheck final : AstNVisitor {
     // VISITORS
     virtual void visit(AstNetlist* nodep) override { iterateChildren(nodep); }
 
-    virtual void visit(AstNodeModule* nodep) override {
+    virtual void visit(AstModule* nodep) override {
         // m_modp = nodep;
         iterateChildren(nodep);
         // m_modp = nullptr;
@@ -4633,7 +4633,7 @@ class getScopes final : public AstNVisitor {
 
 class cudaMemAssign final : public AstNVisitor {
 
-    AstNodeModule* m_modp;
+    AstModule* m_modp;
     size_t m_cmem = 0;
     size_t m_smem = 0;
     size_t m_imem = 0;
@@ -4656,20 +4656,20 @@ class cudaMemAssign final : public AstNVisitor {
     std::unordered_map<Key, size_t, hash, equal> m_memLocMap;
 
     struct equalM {
-        bool operator()(const AstNodeModule* lhs, const AstNodeModule* rhs) const { return (lhs == rhs); }
+        bool operator()(const AstModule* lhs, const AstModule* rhs) const { return (lhs == rhs); }
     };
 
     struct hashM {
-        size_t operator()(const AstNodeModule* mod) const { return ((size_t)mod) >> 3; }
+        size_t operator()(const AstModule* mod) const { return ((size_t)mod) >> 3; }
     };
 
-    std::unordered_map<AstNodeModule*, std::vector<AstVar*>, hashM, equalM> m_modMap;
+    std::unordered_map<AstModule*, std::vector<AstVar*>, hashM, equalM> m_modMap;
     std::vector<AstScope*> m_scps;
 
     // VISITORS
     virtual void visit(AstNetlist* nodep) override { iterateChildren(nodep); }
 
-    virtual void visit(AstNodeModule* nodep) override {
+    virtual void visit(AstModule* nodep) override {
         m_modp = nodep;
         m_modMap.insert({m_modp, std::vector<AstVar*>()});
         iterateChildren(nodep);
@@ -4686,10 +4686,6 @@ class cudaMemAssign final : public AstNVisitor {
     virtual void visit(AstNode* nodep) override { iterateChildren(nodep); }
 
     virtual void visit(AstVar* nodep) override {
-        if(nodep->name() == "debug_req_valid") {
-          std::cerr << "YES!!!!!!\n";
-          std::cerr << m_modp->name() << "\n";
-        }
         if (nodep->isCuda()) { m_modMap[m_modp].push_back(nodep); }
         iterateChildren(nodep);
     }
@@ -4732,7 +4728,7 @@ public:
         iterate(v3Global.rootp());
 
         // top does not belong to cell
-        AstNodeModule* topModp = VN_CAST(v3Global.rootp()->topModulep(), NodeModule);
+        AstModule* topModp = VN_CAST(v3Global.rootp()->topModulep(), Module);
         auto& vec = m_modMap[topModp];
         for (AstVar* varp : vec) {
             // TODO: I assume we don't have array of array
@@ -4748,11 +4744,9 @@ public:
 
         // scopes
         sortScps();
-        AstNodeModule* prev_modp{nullptr};
+        AstModule* prev_modp{nullptr};
         for (AstScope* scp : m_scps) {
-            std::cerr << "scp:" << scp->name() << "\n";
-            std::cerr << "mod:" << scp->modp()->name() << "\n";
-            AstNodeModule* cur_modp = VN_CAST(scp->modp(), NodeModule);
+            AstModule* cur_modp = VN_CAST(scp->modp(), Module);
 
             auto& vec = m_modMap[cur_modp];
             for (AstVar* varp : vec) {
@@ -4765,13 +4759,7 @@ public:
                 } else {
                     loc = countMem(dtypep, varp, 1);
                 }
-
-
                 m_memLocMap.insert({{scp, varp}, loc});
-
-                if(varp->name() == "debug_req_valid") {
-                  std::cerr << "IN!!!!!\n";
-                }
 
                 if (prev_modp != cur_modp) {
                     // set base mem location to each AstVar
@@ -4809,9 +4797,6 @@ public:
             if (search != m_memLocMap.end()) {
                 nodep->setMemLoc((*search).second);
             } else {
-                std::cerr << nodep->name() << "\n";
-                std::cerr << nodep->scopep()->name() << "\n";
-                std::cerr << varp->name() << "\n";
                 assert(false);
             }
         }
@@ -5012,7 +4997,7 @@ private:
     // VISITORS
     virtual void visit(AstNetlist* nodep) override { iterateChildren(nodep); }
 
-    virtual void visit(AstNodeModule* nodep) override {
+    virtual void visit(AstModule* nodep) override {
         // m_modp = nodep;
         iterateChildren(nodep);
         // m_modp = nullptr;
@@ -5078,7 +5063,7 @@ private:
     // VISITORS
     // cacaule size of each type mem
     // exclude cells
-    virtual void visit(AstNodeModule* nodep) override {
+    virtual void visit(AstModule* nodep) override {
         m_cmem = 0;
         m_smem = 0;
         m_imem = 0;
@@ -5095,10 +5080,10 @@ private:
     // virtual void visit(AstScope* nodep) override {
     //}
 
-    //virtual void visit(AstCell* nodep) override {
-        ////AstModule* modp = VN_CAST(nodep->modp(), Module);
-        ////assert(modp->isCount());
-    //}
+    virtual void visit(AstCell* nodep) override {
+        AstModule* modp = VN_CAST(nodep->modp(), Module);
+        assert(modp->isCount());
+    }
 
     virtual void visit(AstNode* nodep) override { iterateChildren(nodep); }
 
@@ -5128,7 +5113,6 @@ private:
                 countMem(dtypep, nodep, 1);
             }
         }
-      iterateChildren(nodep);
     }
 
     // sort by level
@@ -5551,21 +5535,21 @@ void V3EmitC::emitRTLflowImp() {
     {
       getScopes getscps;
       struct equalM {
-          bool operator()(const AstNodeModule* lhs, const AstNodeModule* rhs) const { return (lhs == rhs); }
+          bool operator()(const AstModule* lhs, const AstModule* rhs) const { return (lhs == rhs); }
       };
 
       struct hashM {
-          size_t operator()(const AstNodeModule* mod) const { return ((size_t)mod) >> 3; }
+          size_t operator()(const AstModule* mod) const { return ((size_t)mod) >> 3; }
       };
 
-      std::unordered_map<AstNodeModule*, int, hashM, equalM> modMap;
+      std::unordered_map<AstModule*, int, hashM, equalM> modMap;
       of.puts("void RTLflow::_ctor_var_reset(" + topClassName + "__Syms* VlSymsp) {\n");
       of.puts("size_t offsetc{0};\n");
       of.puts("size_t offsets{0};\n");
       of.puts("size_t offseti{0};\n");
       of.puts("size_t offsetq{0};\n");
       for(auto&& scp: getscps.scps()) {
-        AstNodeModule* modp = VN_CAST(scp->modp(), NodeModule);
+        AstModule* modp = VN_CAST(scp->modp(), Module);
         auto search = modMap.find(modp);
         if (search != modMap.end()) {
           (search->second)++;
@@ -5748,7 +5732,7 @@ void V3EmitC::emitc() {
         }
     }
     // RTLflow
-    AstNodeModule* topp = VN_CAST(v3Global.rootp()->topModulep(), NodeModule);
+    AstModule* topp = VN_CAST(v3Global.rootp()->topModulep(), Module);
     emitRTLflowInt(topp->cmem(), topp->smem(), topp->imem(), topp->qmem());
     emitRTLflowImp();
 }

@@ -2848,12 +2848,6 @@ private:
     VLifetime m_lifetime;  // Lifetime
     VTimescale m_timeunit;  // Global time unit
     VOptionBool m_unconnectedDrive;  // State of `unconnected_drive
-
-    size_t m_cmem;
-    size_t m_smem;
-    size_t m_imem;
-    size_t m_qmem;
-    bool m_isCount{false};
 protected:
     AstNodeModule(AstType t, FileLine* fl, const string& name)
         : AstNode{t, fl}
@@ -2912,17 +2906,6 @@ public:
     VTimescale timeunit() const { return m_timeunit; }
     void unconnectedDrive(const VOptionBool flag) { m_unconnectedDrive = flag; }
     VOptionBool unconnectedDrive() const { return m_unconnectedDrive; }
-
-    void cmem(size_t cmem) { m_cmem = cmem; }
-    void smem(size_t smem) { m_smem = smem; }
-    void imem(size_t imem) { m_imem = imem; }
-    void qmem(size_t qmem) { m_qmem = qmem; }
-    void isCount(bool count) { m_isCount = count; }
-    size_t cmem() const { return m_cmem; }
-    size_t smem() const { return m_smem; }
-    size_t imem() const { return m_imem; }
-    size_t qmem() const { return m_qmem; }
-    bool isCount() const { return m_isCount; }
 };
 
 class AstNodeRange VL_NOT_FINAL : public AstNode {
