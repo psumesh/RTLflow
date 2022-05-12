@@ -70,8 +70,7 @@ private:
     struct WeightTable final {
 
       WeightTable() {
-        // temperoliy hard coded
-        std::ifstream wf("/home/dian-lun/rtlflow_research/RTLflow-benchmarks/hw_small/outdir/nv_small/rtlflow_bs256_vps8/weights.out");
+        std::ifstream wf(v3Global.opt.weightTable());
         if(wf.is_open()) {
           std::string line;
           std::string token;
@@ -90,17 +89,15 @@ private:
         else {
           assert(false);
         }
-
       }
+
+      ~WeightTable() = default;
   
       void dump(std::ostream& os) {
         for(auto& k_v: table) {
           os << k_v.first << " " << k_v.second << "\n";
         }
       }
-
-      ~WeightTable() = default;
-
 
       float operator[](const std::string& key) {
         return table[key];

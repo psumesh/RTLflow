@@ -5697,6 +5697,8 @@ void V3EmitC::emitRTLflowImp() {
     of.puts("init_detect_t.precede(end_t, init_sim_t);\n\n");
     of.puts("sim_t.precede(detect_t);\n");
     of.puts("detect_t.precede(end_t, sim_t);\n");
+    of.puts("std::ofstream ofs(\"./cudaflow.out\");\n");
+    of.puts("_cudaflow.dump(ofs);\n");
 
     of.puts("}\n");
     of.puts("} // end of namespace RF ==================================== \n");

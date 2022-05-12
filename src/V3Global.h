@@ -158,6 +158,7 @@ public:
     void useRandomizeMethods(bool flag) { m_useRandomizeMethods = flag; }
     bool useRandomizeMethods() const { return m_useRandomizeMethods; }
     const std::string& ptrToId(const void* p);
+
 };
 
 extern V3Global v3Global;

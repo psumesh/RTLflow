@@ -208,7 +208,6 @@ RAW_OBJS = \
 	V3HierBlock.o \
 	V3Inline.o \
 	V3Inst.o \
-	#V3InstrCount.o
 	V3CudaInstrCount.o \
 	V3Life.o \
 	V3LifePost.o \

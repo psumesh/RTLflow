@@ -971,6 +971,8 @@ void V3Options::parseOptsList(FileLine* fl, const string& optdir, int argc, char
                 [this](const char* optp) { addLangExt(optp, V3LangCode::L1800_2017); });
 
     // Minus options
+    // RTLflow weight table
+    DECL_OPTION("-weight_table", Set, & m_wt);
     DECL_OPTION("-assert", OnOff, &m_assert);
     DECL_OPTION("-autoflush", OnOff, &m_autoflush);
 

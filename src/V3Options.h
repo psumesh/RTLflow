@@ -205,6 +205,8 @@ private:
     V3StringList m_forceIncs;   // argument: -FI
     DebugSrcMap m_debugSrcs;    // argument: --debugi-<srcfile>=<level>
     DebugSrcMap m_dumpTrees;    // argument: --dump-treei-<srcfile>=<level>
+
+
     std::map<const string, string> m_parameters;  // Parameters
     std::map<const string, V3HierarchicalBlockOption> m_hierBlocks;  // main switch: --hierarchical-block
 
@@ -316,6 +318,7 @@ private:
     int         m_compLimitMembers = 64;  // compiler selection; number of members in struct before make anon array
     int         m_compLimitParens = 0;  // compiler selection; number of nested parens
 
+    string      m_wt;          // argument: -weight_table=<path>
     string      m_bin;          // main switch: --bin {binary}
     string      m_exeName;      // main switch: -o {name}
     string      m_flags;        // main switch: -f {name}
@@ -405,6 +408,7 @@ public:
     void notify();
 
     // ACCESSORS (options)
+    string weightTable() { return m_wt; }
     bool preprocOnly() const { return m_preprocOnly; }
     bool makePhony() const { return m_makePhony; }
     bool preprocNoLine() const { return m_preprocNoLine; }
