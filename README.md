@@ -1,6 +1,6 @@
 # RTLflow <img align="right" src="./logo.png" />
 
-A GPU acceleration flow for RTL simulation with multiple testbenches. 
+A GPU acceleration flow for RTL simulation with batch stimulus. 
 
 
 # What is RTLflow?
