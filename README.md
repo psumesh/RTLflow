@@ -4,7 +4,7 @@ A GPU acceleration flow for RTL simulation with multiple testbenches.
 
 
 # What is RTLflow?
-RTLflow is a GPU acceleration flow for RTL simulation with multiple testbenches. RTLflow first transpiles RTL into CUDA kernels that each simulate a partition of the RTL simultaneously across multiple testbenches. It also leverages CUDA Graph for efficient runtime execution. We build RTLflow atop Verilator to inherit its existing optimization facilities, such as variable reduction and partitioning algorithms, that have been rigorously tested for over 25 years in the Verilator community.
+RTLflow is a GPU acceleration flow for RTL simulation with batch stimulus. RTLflow first transpiles RTL into CUDA kernels that each simulate a partition of the RTL simultaneously across multiple stimulus. It also leverages CUDA Graph for efficient runtime execution. We build RTLflow atop Verilator to inherit its existing optimization facilities, such as variable reduction and partitioning algorithms, that have been rigorously tested for over 25 years in the Verilator community.
 
 # For the newest verison of RTLflow, please switch to pipeline branch
 
@@ -43,8 +43,4 @@ Open License
 
 RTLflow is licensed with the MIT License.
 
-Verilator is Copyright 2003-2021 by Wilson Snyder.
 
-Verilator is free software; you can redistribute it and/or modify it under
-the terms of either the GNU Lesser General Public License Version 3 or the
-Perl Artistic License Version 2.0. See the documentation for more details.
