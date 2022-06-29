@@ -8,7 +8,7 @@ RTLflow is a GPU acceleration flow for RTL simulation with batch stimulus. RTLfl
 
 # For the newest verison of RTLflow, please switch to pipeline branch
 
-# Comiple RTLflow
+# Compile RTLflow
 ```bash
 ~$ cd RTLflow
 ~/RTLflow$ autoconf
