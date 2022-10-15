@@ -36,6 +36,9 @@ By default, we set nvcc flag ```--arch=sm_80``` to achieve the best performance 
 ```
 to modify ```$RTLFLOW_FLAGS``` and ```make``` RTLflow again.
 
+# Examples
+  Please go to [RTLflow benchmarks](https://github.com/dian-lun-lin/RTLflow-benchmarks) for more examples.
+
 
 Open License
 ============
